@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '/widgets/widgets.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -11,10 +12,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final List<Category> categories = List.generate(10, (catIndex) {
     return Category(
-      title: 'Category ${catIndex + 1}',
+      title: 'category_title'.tr(args: ['${catIndex + 1}']),
       items: List.generate(6, (storeIndex) {
         return Store(
-          name: 'Store ${storeIndex + 1}',
+          name: 'store_name'.tr(args: ['${storeIndex + 1}']),
           image: storeIndex % 3 == 0
               ? 'assets/images/store1.jpg'
               : storeIndex % 3 == 1
@@ -31,20 +32,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: scheme.surface, // ✅ بدل background
-
-      /// 🔝 AppBar
-      appBar: const CustomAppBar(title: 'Smart Mall Guide'),
-
+      backgroundColor: scheme.surface,
+      appBar: CustomAppBar(title: 'smart_mall_guide'.tr()),
       body: Column(
         children: [
-          /// 🔍 Search Bar
           const Padding(
             padding: EdgeInsets.all(12),
             child: CustomSearchBar(),
           ),
-
-          /// 📦 Categories
           Expanded(
             child: ListView.builder(
               itemCount: categories.length,
@@ -54,11 +49,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: Text(
                         category.title,
                         style: textTheme.bodyLarge?.copyWith(
-                          color: scheme.onSurface, // ✅ بدل onBackground
+                          color: scheme.onSurface,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -90,7 +86,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// 🏪 Store Card
 class StoreCard extends StatelessWidget {
   final Store store;
 
@@ -108,7 +103,7 @@ class StoreCard extends StatelessWidget {
           image: AssetImage(store.image),
           fit: BoxFit.cover,
         ),
-        border: Border.all(color: Colors.black, width: 2), 
+        border: Border.all(color: Colors.black, width: 2),
       ),
       child: Align(
         alignment: Alignment.bottomCenter,
@@ -116,7 +111,7 @@ class StoreCard extends StatelessWidget {
           height: 32,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: Colors.grey.shade800, 
+            color: Colors.grey.shade800,
             borderRadius: const BorderRadius.only(
               bottomLeft: Radius.circular(15),
               bottomRight: Radius.circular(15),
@@ -135,7 +130,6 @@ class StoreCard extends StatelessWidget {
   }
 }
 
-/// 📦 Models
 class Store {
   final String name;
   final String image;

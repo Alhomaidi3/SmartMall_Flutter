@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ProfileScreen extends StatelessWidget {
   final void Function(bool) onThemeChanged;
-  final void Function(String) onLanguageChanged;
 
   const ProfileScreen({
     super.key,
     required this.onThemeChanged,
-    required this.onLanguageChanged,
   });
 
   @override
@@ -15,20 +14,20 @@ class ProfileScreen extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: scheme.surface, // ✅ بدل background
+      backgroundColor: scheme.surface,
 
       appBar: AppBar(
-        backgroundColor: scheme.surface, // ✅ بدل background
+        backgroundColor: scheme.surface,
         elevation: 0,
         centerTitle: true,
         title: Text(
-          'Profile',
+          'profile'.tr(),
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: scheme.onSurface, // ✅ بدل onBackground
+            color: scheme.onSurface,
           ),
         ),
-        iconTheme: IconThemeData(color: scheme.onSurface), // ✅ بدل onBackground
+        iconTheme: IconThemeData(color: scheme.onSurface),
       ),
 
       body: SingleChildScrollView(
@@ -66,7 +65,7 @@ class ProfileScreen extends StatelessWidget {
                       Text(
                         '@Alhomaidi',
                         style: TextStyle(
-                          color: scheme.onSurface.withValues(alpha: 0.6), // ✅ الجديد
+                          color: scheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -79,9 +78,9 @@ class ProfileScreen extends StatelessWidget {
 
             /// ⚙ Account Section
             Text(
-              'Account',
+              'account'.tr(),
               style: TextStyle(
-                color: scheme.onSurface, // ✅ بدل onBackground
+                color: scheme.onSurface,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -90,24 +89,24 @@ class ProfileScreen extends StatelessWidget {
 
             SettingsTile(
               icon: Icons.person_outline,
-              title: 'My Account',
-              subtitle: 'Make changes to your account',
-              trailing: Icon(Icons.warning, color: Colors.red, size: 18),
+              title: 'my_account'.tr(),
+              subtitle: 'make_changes_account'.tr(),
+              trailing: const Icon(Icons.warning, color: Colors.red, size: 18),
             ),
             SettingsTile(
               icon: Icons.bookmark_border,
-              title: 'Saved Beneficiary',
-              subtitle: 'Manage your saved account',
+              title: 'saved_beneficiary'.tr(),
+              subtitle: 'manage_saved_account'.tr(),
             ),
 
             /// 🎨 Appearance
             SettingsTile(
               icon: Icons.color_lens_outlined,
-              title: 'Appearance',
-              subtitle: 'Switch between dark and light mode',
+              title: 'appearance'.tr(),
+              subtitle: 'switch_theme'.tr(),
               trailing: Switch(
                 value: Theme.of(context).brightness == Brightness.dark,
-                onChanged: (val) => onThemeChanged(val),
+                onChanged: onThemeChanged,
                 activeThumbColor: Colors.orange,
               ),
             ),
@@ -115,34 +114,36 @@ class ProfileScreen extends StatelessWidget {
             /// 🌐 Language
             SettingsTile(
               icon: Icons.language,
-              title: 'Language',
-              subtitle: 'Change app language',
+              title: 'language'.tr(),
+              subtitle: 'change_language'.tr(),
               trailing: DropdownButton<String>(
-                value: Localizations.localeOf(context).languageCode,
+                value: context.locale.languageCode,
                 underline: const SizedBox(),
                 items: const [
                   DropdownMenuItem(value: 'en', child: Text('English')),
                   DropdownMenuItem(value: 'ar', child: Text('العربية')),
                 ],
                 onChanged: (val) {
-                  if (val != null) onLanguageChanged(val);
+                  if (val != null) {
+                    context.setLocale(Locale(val));
+                  }
                 },
               ),
             ),
 
             SettingsTile(
               icon: Icons.logout,
-              title: 'Log out',
-              subtitle: 'Sign out from this account',
+              title: 'logout'.tr(),
+              subtitle: 'signout_account'.tr(),
             ),
 
             const SizedBox(height: 24),
 
             /// ℹ More Section
             Text(
-              'More',
+              'more'.tr(),
               style: TextStyle(
-                color: scheme.onSurface, // ✅ بدل onBackground
+                color: scheme.onSurface,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -151,11 +152,11 @@ class ProfileScreen extends StatelessWidget {
 
             SettingsTile(
               icon: Icons.help_outline,
-              title: 'Help & Support',
+              title: 'help_support'.tr(),
             ),
             SettingsTile(
               icon: Icons.info_outline,
-              title: 'About App',
+              title: 'about_app'.tr(),
             ),
           ],
         ),
@@ -209,7 +210,7 @@ class SettingsTile extends StatelessWidget {
                   Text(
                     subtitle!,
                     style: TextStyle(
-                      color: scheme.onSurface.withValues(alpha: 0.7), // ✅ الجديد
+                      color: scheme.onSurface.withValues(alpha: 0.7),
                       fontSize: 12,
                     ),
                   ),
@@ -217,8 +218,11 @@ class SettingsTile extends StatelessWidget {
             ),
           ),
           trailing ??
-              Icon(Icons.arrow_forward_ios,
-                  size: 14, color: scheme.onSurface.withValues(alpha: 0.6)), // ✅ الجديد
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 14,
+                color: scheme.onSurface.withValues(alpha: 0.6),
+              ),
         ],
       ),
     );

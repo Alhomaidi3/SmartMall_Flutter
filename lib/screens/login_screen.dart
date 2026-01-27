@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -12,7 +13,7 @@ class LoginScreen extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: scheme.surface, // ✅ بدل background
+      backgroundColor: scheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -25,15 +26,15 @@ class LoginScreen extends StatelessWidget {
 
                 SizedBox(height: size.height * 0.08),
 
-                _buildLogo(size),
+                _buildLogo(size), // ✅ Hero مع نفس التاج
 
                 const SizedBox(height: 25),
 
                 Text(
-                  'Smart Mall Guide',
+                  'app_title'.tr(), // ✅ ترجمة
                   textAlign: TextAlign.center,
                   style: textTheme.headlineMedium?.copyWith(
-                    color: scheme.onSurface, // ✅ بدل onBackground
+                    color: scheme.onSurface,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.2,
                   ),
@@ -42,14 +43,14 @@ class LoginScreen extends StatelessWidget {
                 const Spacer(),
 
                 _CustomTextField(
-                  hint: 'Email',
+                  hint: 'email'.tr(), // ✅ ترجمة
                   keyboardType: TextInputType.emailAddress,
                 ),
 
                 const SizedBox(height: 25),
 
                 _CustomTextField(
-                  hint: 'Enter Password',
+                  hint: 'enter_password'.tr(), // ✅ ترجمة
                   isPassword: true,
                 ),
 
@@ -64,9 +65,9 @@ class LoginScreen extends StatelessWidget {
                     Navigator.pushNamed(context, '/signup');
                   },
                   child: Text(
-                    "Don't have an account? Sign Up",
+                    "dont_have_account".tr(), // ✅ ترجمة
                     style: textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurface.withValues(alpha: 0.7), // ✅ الجديد
+                      color: scheme.onSurface.withOpacity(0.7),
                     ),
                   ),
                 ),
@@ -94,15 +95,15 @@ class LoginScreen extends StatelessWidget {
               (route) => false,
             );
           },
-          icon: Icon(Icons.arrow_back, color: scheme.onSurface), // ✅ بدل onBackground
+          icon: Icon(Icons.arrow_back, color: scheme.onSurface),
         ),
         TextButton(
           onPressed: () {
             Navigator.pushReplacementNamed(context, '/home');
           },
           child: Text(
-            'Skip',
-            style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface), // ✅ بدل onBackground
+            'skip'.tr(), // ✅ ترجمة
+            style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
           ),
         ),
       ],
@@ -111,10 +112,13 @@ class LoginScreen extends StatelessWidget {
 
   Widget _buildLogo(Size size) {
     return Center(
-      child: Image.asset(
-        'assets/images/logo.png',
-        width: size.width * 0.45,
-        height: size.width * 0.45,
+      child: Hero(
+        tag: 'logo', // ✅ نفس التاج المستخدم في Onboarding و Signup
+        child: Image.asset(
+          'assets/images/logo.png',
+          width: size.width * 0.45,
+          height: size.width * 0.45,
+        ),
       ),
     );
   }
@@ -136,7 +140,7 @@ class LoginScreen extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        child: const Text('Login'),
+        child: Text('login'.tr()), // ✅ ترجمة
       ),
     );
   }
@@ -169,11 +173,11 @@ class _CustomTextFieldState extends State<_CustomTextField> {
     return TextField(
       obscureText: widget.isPassword ? _obscure : false,
       keyboardType: widget.keyboardType,
-      style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface), // ✅ بدل onBackground
+      style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
       decoration: InputDecoration(
         hintText: widget.hint,
         hintStyle: textTheme.bodySmall?.copyWith(
-          color: scheme.onSurface.withValues(alpha: 0.6), // ✅ الجديد
+          color: scheme.onSurface.withOpacity(0.6),
         ),
         enabledBorder: UnderlineInputBorder(
           borderSide: BorderSide(color: scheme.onSurface),

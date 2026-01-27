@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '/widgets/widgets.dart';
 
 class MapScreen extends StatelessWidget {
@@ -10,47 +11,45 @@ class MapScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: scheme.surface,
-
-      /// 🔝 AppBar
-      appBar: const CustomAppBar(title: 'Smart Mall Guide'),
-
-      /// 🗺 Map Body
+      appBar: CustomAppBar(title: 'smart_mall_guide'.tr()),
       body: Stack(
         children: [
-          /// Map + Markers داخل InteractiveViewer
           Positioned.fill(
             child: InteractiveViewer(
-              panEnabled: true, // يسمح بالسحب
-              minScale: 0.5,    // أقل نسبة تصغير
-              maxScale: 4.0,    // أقصى نسبة تكبير
+              panEnabled: true,
+              minScale: 0.5,
+              maxScale: 4.0,
               child: Stack(
                 children: [
-                  /// Map Image
                   Positioned.fill(
                     child: Image.asset(
                       'assets/images/map.png',
                       fit: BoxFit.cover,
                     ),
                   ),
-
-                  /// 📍 Store Markers (تتحرك مع الخريطة)
-                  const Positioned(top: 260, left: 70, child: MapMarker(label: 'BATA')),
-                  const Positioned(bottom: 200, left: 140, child: MapMarker(label: 'NIKE')),
-                  const Positioned(bottom: 240, right: 70, child: MapMarker(label: 'STYLO')),
+                  /// 📍 Store Markers
+                  Positioned(
+                      top: 260,
+                      left: 70,
+                      child: MapMarker(label: 'store_bata'.tr())),
+                  Positioned(
+                      bottom: 200,
+                      left: 140,
+                      child: MapMarker(label: 'store_nike'.tr())),
+                  Positioned(
+                      bottom: 240,
+                      right: 70,
+                      child: MapMarker(label: 'store_stylo'.tr())),
                 ],
               ),
             ),
           ),
-
-          /// 🔍 Search Bar (ثابت فوق الخريطة)
           const Positioned(
             top: 12,
             left: 12,
             right: 12,
             child: CustomSearchBar(),
           ),
-
-          /// 🏷 Categories (ثابتة فوق الخريطة)
           Positioned(
             top: 80,
             left: 0,
@@ -60,18 +59,16 @@ class MapScreen extends StatelessWidget {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                children: const [
-                  MapChip(title: 'Clothing'),
-                  MapChip(title: 'Shoes'),
-                  MapChip(title: 'Perfumes'),
-                  MapChip(title: 'Electronics'),
-                  MapChip(title: 'Accessories'),
+                children: [
+                  MapChip(title: 'category_clothing'.tr()),
+                  MapChip(title: 'category_shoes'.tr()),
+                  MapChip(title: 'category_perfumes'.tr()),
+                  MapChip(title: 'category_electronics'.tr()),
+                  MapChip(title: 'category_accessories'.tr()),
                 ],
               ),
             ),
           ),
-
-          /// 🎯 Floating Buttons (ثابتة فوق الخريطة)
           Positioned(
             right: 16,
             bottom: 120,

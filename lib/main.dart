@@ -1,11 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
+
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/main_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
+
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [
+        Locale('en'),
+        Locale('ar'),
+      ],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('ar'),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -16,18 +31,11 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  ThemeMode _themeMode = ThemeMode.dark; // الوضع الافتراضي
-  Locale _locale = const Locale('en');   // اللغة الافتراضية
+  ThemeMode _themeMode = ThemeMode.dark;
 
   void _toggleTheme(bool isDark) {
     setState(() {
       _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
-    });
-  }
-
-  void _changeLanguage(String langCode) {
-    setState(() {
-      _locale = Locale(langCode);
     });
   }
 
@@ -37,7 +45,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       title: 'Smart Mall Guide',
 
-      /// 🎨 الوضع الفاتح
+      /// 🎨 Light Theme
       theme: ThemeData(
         brightness: Brightness.light,
         colorScheme: const ColorScheme.light(
@@ -50,11 +58,8 @@ class _MyAppState extends State<MyApp> {
         ),
         scaffoldBackgroundColor: Colors.white,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,   // ✅ أبيض في الفاتح
-          foregroundColor: Colors.black,   // النص والأيقونات سوداء
-        ),
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(color: Colors.black),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: Colors.white,
@@ -63,7 +68,7 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
 
-      /// 🌙 الوضع الداكن
+      /// 🌙 Dark Theme
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         colorScheme: const ColorScheme.dark(
@@ -76,11 +81,8 @@ class _MyAppState extends State<MyApp> {
         ),
         scaffoldBackgroundColor: Colors.black,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.black,   // ✅ أسود في الداكن
-          foregroundColor: Colors.white,   // النص والأيقونات بيضاء
-        ),
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(color: Colors.white),
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: Colors.black,
@@ -90,18 +92,18 @@ class _MyAppState extends State<MyApp> {
       ),
 
       themeMode: _themeMode,
-      locale: _locale,
-      supportedLocales: const [
-        Locale('en'),
-        Locale('ar'),
-      ],
+
+      /// ✅ EasyLocalization (المصدر الوحيد)
+      locale: context.locale,
+      supportedLocales: context.supportedLocales,
+      localizationsDelegates: context.localizationDelegates,
+
       routes: {
         '/': (_) => const OnboardingScreen(),
         '/login': (_) => const LoginScreen(),
         '/signup': (_) => const SignUpScreen(),
         '/home': (_) => MainScreen(
               onThemeChanged: _toggleTheme,
-              onLanguageChanged: _changeLanguage,
             ),
       },
     );

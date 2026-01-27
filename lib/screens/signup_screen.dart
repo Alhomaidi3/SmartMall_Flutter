@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -19,7 +20,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return InputDecoration(
       hintText: hint,
       hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: scheme.onSurface.withValues(alpha: 0.6), // ✅ الجديد
+            color: scheme.onSurface.withOpacity(0.6),
           ),
       prefixIcon: prefix,
       suffixIcon: suffix,
@@ -41,7 +42,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: scheme.surface, // ✅ بدل background
+        backgroundColor: scheme.surface,
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -51,10 +52,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 10),
 
                 Text(
-                  'Sign Up',
+                  'sign_up'.tr(),
                   style: textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: scheme.onSurface, // ✅ بدل onBackground
+                    color: scheme.onSurface,
                   ),
                 ),
 
@@ -64,10 +65,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                 const SizedBox(height: 12),
 
-                _buildTextField('Enter Your Name'),
-                _buildTextField('Email'),
+                _buildTextField('enter_your_name'.tr()),
+                _buildTextField('email'.tr()),
                 _buildTextField(
-                  'Phone number',
+                  'phone_number'.tr(),
                   prefix: Icon(Icons.flag, color: scheme.onSurface, size: 18),
                   keyboardType: TextInputType.phone,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -78,7 +79,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 _buildDateOfBirth(),
 
                 _buildPasswordField(
-                  'Choose Password',
+                  'choose_password'.tr(),
                   _obscurePassword,
                   () {
                     setState(() => _obscurePassword = !_obscurePassword);
@@ -86,7 +87,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
 
                 _buildPasswordField(
-                  'Confirm Password',
+                  'confirm_password'.tr(),
                   _obscureConfirmPassword,
                   () {
                     setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
@@ -104,9 +105,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     Navigator.pushReplacementNamed(context, '/login');
                   },
                   child: Text(
-                    'Already have an account? Login',
+                    'already_have_account'.tr(),
                     style: textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurface.withValues(alpha: 0.7), // ✅ الجديد
+                      color: scheme.onSurface.withOpacity(0.7),
                     ),
                   ),
                 ),
@@ -125,7 +126,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         IconButton(
-          icon: Icon(Icons.arrow_back, color: scheme.onSurface), // ✅ بدل onBackground
+          icon: Icon(Icons.arrow_back, color: scheme.onSurface),
           onPressed: () {
             Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
           },
@@ -135,8 +136,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             Navigator.pushReplacementNamed(context, '/home');
           },
           child: Text(
-            'Skip',
-            style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface), // ✅ بدل onBackground
+            'skip'.tr(),
+            style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
           ),
         ),
       ],
@@ -153,13 +154,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
           height: size.width * 0.20,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: scheme.surfaceContainerHighest,  
+            color: scheme.surfaceContainerHighest,
           ),
           child: Icon(Icons.person, color: scheme.onSurface, size: 36),
         ),
         const SizedBox(height: 4),
         Text(
-          'upload profile picture',
+          'upload_profile_picture'.tr(),
           style: textTheme.bodySmall?.copyWith(color: scheme.onSurface),
         ),
       ],
@@ -178,7 +179,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       child: TextField(
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurface), // ✅ بدل onBackground
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
         decoration: _decoration(hint, prefix: prefix),
       ),
     );
@@ -191,12 +192,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
       padding: const EdgeInsets.only(bottom: 10),
       child: DropdownButtonFormField<String>(
         initialValue: _gender,
-        decoration: _decoration('Select your gender'),
+        decoration: _decoration('select_gender'.tr()),
         dropdownColor: scheme.surface,
-        style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface), // ✅ بدل onBackground
-        items: const [
-          DropdownMenuItem(value: 'Male', child: Text('Male')),
-          DropdownMenuItem(value: 'Female', child: Text('Female')),
+        style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
+        items: [
+          DropdownMenuItem(value: 'Male', child: Text('male'.tr())),
+          DropdownMenuItem(value: 'Female', child: Text('female'.tr())),
         ],
         onChanged: (value) {
           setState(() => _gender = value);
@@ -212,9 +213,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       child: TextField(
         controller: _dobController,
         readOnly: true,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurface), // ✅ بدل onBackground
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
         decoration: _decoration(
-          'Date of Birth',
+          'date_of_birth'.tr(),
           suffix: Icon(Icons.calendar_today, color: scheme.onSurface, size: 18),
         ),
         onTap: _pickDate,
@@ -232,7 +233,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       padding: const EdgeInsets.only(bottom: 10),
       child: TextField(
         obscureText: obscure,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurface), // ✅ بدل onBackground
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
         decoration: _decoration(
           hint,
           suffix: IconButton(
@@ -266,7 +267,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        child: const Text('Create Account'),
+        child: Text('create_account'.tr()),
       ),
     );
   }

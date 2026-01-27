@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
@@ -9,7 +10,7 @@ class OnboardingScreen extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: scheme.surface, // ✅ بدل background
+      backgroundColor: scheme.surface,
       body: SafeArea(
         child: Stack(
           children: [
@@ -21,9 +22,9 @@ class OnboardingScreen extends StatelessWidget {
                   Navigator.pushReplacementNamed(context, '/home');
                 },
                 child: Text(
-                  'Skip',
+                  'skip'.tr(), // ✅ مفتاح الترجمة
                   style: textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurface.withValues(alpha: 0.7), // ✅ الجديد
+                    color: scheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
               ),
@@ -37,7 +38,7 @@ class OnboardingScreen extends StatelessWidget {
                     children: [
                       const SizedBox(height: 60),
                       Hero(
-                        tag: 'logo',
+                        tag: 'logo', // ✅ نفس التاج يستخدم في كل الشاشات
                         child: Image.asset(
                           'assets/images/logo.png',
                           width: 180,
@@ -46,31 +47,31 @@ class OnboardingScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 30),
                       Text(
-                        'Smart Mall Guide',
+                        'app_title'.tr(), // ✅ مفتاح الترجمة
                         style: textTheme.headlineSmall?.copyWith(
-                          color: scheme.onSurface, // ✅ بدل onBackground
+                          color: scheme.onSurface,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 40),
                       AnimatedButton(
-                        text: 'Sign Up',
+                        text: 'signup'.tr(), // ✅ مفتاح الترجمة
                         onPressed: () {
                           Navigator.pushNamed(context, '/signup');
                         },
                       ),
                       const SizedBox(height: 14),
                       AnimatedButton(
-                        text: 'Login',
+                        text: 'login'.tr(), // ✅ مفتاح الترجمة
                         onPressed: () {
                           Navigator.pushNamed(context, '/login');
                         },
                       ),
                       const SizedBox(height: 35),
                       Text(
-                        'Continue with',
+                        'continue_with'.tr(), // ✅ مفتاح الترجمة
                         style: textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurface.withValues(alpha: 0.7), // ✅ الجديد
+                          color: scheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                       const SizedBox(height: 18),
@@ -116,7 +117,7 @@ class AnimatedButton extends StatefulWidget {
   final String text;
   final VoidCallback onPressed;
 
-  const AnimatedButton({required this.text, required this.onPressed, super.key}); // ✅ إضافة key
+  const AnimatedButton({required this.text, required this.onPressed, super.key});
 
   @override
   State<AnimatedButton> createState() => _AnimatedButtonState();
@@ -150,7 +151,7 @@ class _AnimatedButtonState extends State<AnimatedButton> {
               elevation: 8,
             ),
             onPressed: widget.onPressed,
-            child: Text(widget.text), // ✅ child آخر باراميتر
+            child: Text(widget.text),
           ),
         ),
       ),
@@ -163,7 +164,7 @@ class InteractiveSocialIcon extends StatefulWidget {
   final IconData icon;
   final Color color;
 
-  const InteractiveSocialIcon({required this.icon, required this.color, super.key}); // ✅ إضافة key
+  const InteractiveSocialIcon({required this.icon, required this.color, super.key});
 
   @override
   State<InteractiveSocialIcon> createState() => _InteractiveSocialIconState();

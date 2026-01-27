@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screens/home_screen.dart';
 import '../screens/map_screen.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 /// 🔹 Main Button
 class MainButton extends StatelessWidget {
@@ -172,7 +173,7 @@ class CustomSearchBar extends StatelessWidget {
       child: TextField(
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
         decoration: InputDecoration(
-          hintText: 'Search for a store, restaurant, or service...',
+          hintText: 'search_hint'.tr(),
           hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
           prefixIcon: Icon(Icons.search, color: scheme.onSurface.withValues(alpha: 0.6)), // ✅ بدل withOpacity
           filled: true,
