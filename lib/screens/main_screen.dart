@@ -37,33 +37,37 @@ class _MainScreenState extends State<MainScreen> {
         index: currentIndex,
         children: pages,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor:
-            Theme.of(context).bottomNavigationBarTheme.backgroundColor ??
-                scheme.surface,
-        selectedItemColor: scheme.primary,
-        unselectedItemColor: scheme.onSurface.withOpacity(0.6),
-        currentIndex: currentIndex,
-        onTap: (index) {
-          setState(() {
-            currentIndex = index;
-          });
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.home),
-            label: 'home'.tr(),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.map_outlined),
-            label: 'map'.tr(),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.person_outline),
-            label: 'profile'.tr(),
-          ),
-        ],
-      ),
+    bottomNavigationBar: BottomNavigationBar(
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.grey[900]  // نفس لون الخلفية في الوضع الداكن
+          : Colors.grey[100], // نفس لون الخلفية في الوضع الفاتح
+      selectedItemColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.orange
+          : scheme.primary,
+      unselectedItemColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.grey[500]
+          : scheme.onSurface.withOpacity(0.6),
+      currentIndex: currentIndex,
+      onTap: (index) {
+        setState(() {
+          currentIndex = index;
+        });
+      },
+      items: [
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.home),
+          label: 'home'.tr(),
+        ),
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.map_outlined),
+          label: 'map'.tr(),
+        ),
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.person_outline),
+          label: 'profile'.tr(),
+        ),
+      ],
+    ),
     );
   }
 }

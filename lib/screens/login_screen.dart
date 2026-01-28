@@ -31,7 +31,7 @@ class LoginScreen extends StatelessWidget {
                 const SizedBox(height: 25),
 
                 Text(
-                  'app_title'.tr(), // ✅ ترجمة
+                  'app_title'.tr(),
                   textAlign: TextAlign.center,
                   style: textTheme.headlineMedium?.copyWith(
                     color: scheme.onSurface,
@@ -43,31 +43,41 @@ class LoginScreen extends StatelessWidget {
                 const Spacer(),
 
                 _CustomTextField(
-                  hint: 'email'.tr(), // ✅ ترجمة
+                  hint: 'email'.tr(),
                   keyboardType: TextInputType.emailAddress,
                 ),
 
                 const SizedBox(height: 25),
 
                 _CustomTextField(
-                  hint: 'enter_password'.tr(), // ✅ ترجمة
+                  hint: 'enter_password'.tr(),
                   isPassword: true,
                 ),
 
                 const SizedBox(height: 35),
 
-                _buildLoginButton(context),
+                // ✅ الزر مركزي وثابت الحجم
+                Center(
+                  child: AnimatedButton(
+                    text: 'login'.tr(),
+                    onPressed: () {
+                      // هنا كود تسجيل الدخول
+                    },
+                  ),
+                ),
 
                 const SizedBox(height: 15),
 
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/signup');
-                  },
-                  child: Text(
-                    "dont_have_account".tr(), // ✅ ترجمة
-                    style: textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurface.withOpacity(0.7),
+                Center(
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/signup');
+                    },
+                    child: Text(
+                      "dont_have_account".tr(),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurface.withOpacity(0.7),
+                      ),
                     ),
                   ),
                 ),
@@ -102,7 +112,7 @@ class LoginScreen extends StatelessWidget {
             Navigator.pushReplacementNamed(context, '/home');
           },
           child: Text(
-            'skip'.tr(), // ✅ ترجمة
+            'skip'.tr(),
             style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
           ),
         ),
@@ -111,42 +121,72 @@ class LoginScreen extends StatelessWidget {
   }
 
   Widget _buildLogo(Size size) {
-    return Center(
-      child: Hero(
-        tag: 'logo', // ✅ نفس التاج المستخدم في Onboarding و Signup
-        child: Image.asset(
-          'assets/images/logo.png',
-          width: size.width * 0.45,
-          height: size.width * 0.45,
-        ),
+  return Center(
+    child: Hero(
+      tag: 'logo',
+      child: Image.asset(
+        'assets/images/logo.png',
+        width: 220,  // ✅ حجم ثابت
+        height: 220, // ✅ حجم ثابت
+        fit: BoxFit.contain, // ✅ بدون تمدد
       ),
-    );
-  }
-
-  Widget _buildLoginButton(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return SizedBox(
-      height: 50,
-      child: ElevatedButton(
-        onPressed: () {},
-        style: ElevatedButton.styleFrom(
-          backgroundColor: scheme.primary,
-          foregroundColor: scheme.onPrimary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        child: Text('login'.tr()), // ✅ ترجمة
-      ),
-    );
-  }
+    ),
+  );
+}
 }
 
-// ---------- هنا التعديل الأساسي ----------
+// ---------- زر متحرك مثل Onboarding ----------
+class AnimatedButton extends StatefulWidget {
+  final String text;
+  final VoidCallback onPressed;
+
+  const AnimatedButton({required this.text, required this.onPressed, super.key});
+
+  @override
+  State<AnimatedButton> createState() => _AnimatedButtonState();
+}
+
+class _AnimatedButtonState extends State<AnimatedButton> {
+  double _scale = 1.0;
+
+  @override
+ Widget build(BuildContext context) {
+  final scheme = Theme.of(context).colorScheme;
+
+  return GestureDetector(
+    onTapDown: (_) => setState(() => _scale = 0.95),
+    onTapUp: (_) => setState(() => _scale = 1.0),
+    onTapCancel: () => setState(() => _scale = 1.0),
+    onTap: widget.onPressed,
+    child: Transform.scale(
+      scale: _scale,
+      child: SizedBox(
+        width: 250,  // ✅ نفس حجم زر Login
+        height: 50,  // ✅ نفس الارتفاع
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: scheme.primary,
+            foregroundColor: scheme.onPrimary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+            shadowColor: scheme.shadow,
+            elevation: 8,
+            textStyle: const TextStyle(
+              fontSize: 16,      // ✅ حجم الخط
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          onPressed: widget.onPressed,
+          child: Text(widget.text),
+        ),
+      ),
+    ),
+  );
+}
+}
+
+// ---------- TextField مخصص ----------
 class _CustomTextField extends StatefulWidget {
   final String hint;
   final bool isPassword;

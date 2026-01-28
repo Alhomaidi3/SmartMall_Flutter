@@ -12,12 +12,13 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: scheme.surface,
+      backgroundColor: isDark ? Colors.black : Colors.white,
 
       appBar: AppBar(
-        backgroundColor: scheme.surface,
+        backgroundColor: isDark ? Colors.black : Colors.white,
         elevation: 0,
         centerTitle: true,
         title: Text(
@@ -39,7 +40,7 @@ class ProfileScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: scheme.surface,
+                color: isDark ? Colors.grey[900] : Colors.grey[100],
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
@@ -54,7 +55,7 @@ class ProfileScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Abdulrahman Alhomaidi',
+                        'UserName'.tr(),
                         style: TextStyle(
                           color: scheme.onSurface,
                           fontSize: 16,
@@ -65,7 +66,7 @@ class ProfileScreen extends StatelessWidget {
                       Text(
                         '@Alhomaidi',
                         style: TextStyle(
-                          color: scheme.onSurface.withValues(alpha: 0.6),
+                          color: scheme.onSurface.withOpacity(0.6),
                         ),
                       ),
                     ],
@@ -92,11 +93,13 @@ class ProfileScreen extends StatelessWidget {
               title: 'my_account'.tr(),
               subtitle: 'make_changes_account'.tr(),
               trailing: const Icon(Icons.warning, color: Colors.red, size: 18),
+              isDark: isDark,
             ),
             SettingsTile(
               icon: Icons.bookmark_border,
               title: 'saved_beneficiary'.tr(),
               subtitle: 'manage_saved_account'.tr(),
+              isDark: isDark,
             ),
 
             /// 🎨 Appearance
@@ -105,10 +108,11 @@ class ProfileScreen extends StatelessWidget {
               title: 'appearance'.tr(),
               subtitle: 'switch_theme'.tr(),
               trailing: Switch(
-                value: Theme.of(context).brightness == Brightness.dark,
+                value: isDark,
                 onChanged: onThemeChanged,
                 activeThumbColor: Colors.orange,
               ),
+              isDark: isDark,
             ),
 
             /// 🌐 Language
@@ -129,12 +133,14 @@ class ProfileScreen extends StatelessWidget {
                   }
                 },
               ),
+              isDark: isDark,
             ),
 
             SettingsTile(
               icon: Icons.logout,
               title: 'logout'.tr(),
               subtitle: 'signout_account'.tr(),
+              isDark: isDark,
             ),
 
             const SizedBox(height: 24),
@@ -153,10 +159,12 @@ class ProfileScreen extends StatelessWidget {
             SettingsTile(
               icon: Icons.help_outline,
               title: 'help_support'.tr(),
+              isDark: isDark,
             ),
             SettingsTile(
               icon: Icons.info_outline,
               title: 'about_app'.tr(),
+              isDark: isDark,
             ),
           ],
         ),
@@ -171,6 +179,7 @@ class SettingsTile extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? trailing;
+  final bool isDark; // ✅ جديد
 
   const SettingsTile({
     super.key,
@@ -178,6 +187,7 @@ class SettingsTile extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.trailing,
+    required this.isDark,
   });
 
   @override
@@ -188,7 +198,7 @@ class SettingsTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: scheme.surface,
+        color: isDark ? Colors.grey[850] : Colors.grey[200],
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -210,7 +220,7 @@ class SettingsTile extends StatelessWidget {
                   Text(
                     subtitle!,
                     style: TextStyle(
-                      color: scheme.onSurface.withValues(alpha: 0.7),
+                      color: scheme.onSurface.withOpacity(0.7),
                       fontSize: 12,
                     ),
                   ),
@@ -221,7 +231,7 @@ class SettingsTile extends StatelessWidget {
               Icon(
                 Icons.arrow_forward_ios,
                 size: 14,
-                color: scheme.onSurface.withValues(alpha: 0.6),
+                color: scheme.onSurface.withOpacity(0.6),
               ),
         ],
       ),

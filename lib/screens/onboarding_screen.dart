@@ -14,17 +14,17 @@ class OnboardingScreen extends StatelessWidget {
       body: SafeArea(
         child: Stack(
           children: [
-            Positioned(
-              top: 10,
-              right: 16,
-              child: TextButton(
-                onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/home');
-                },
-                child: Text(
-                  'skip'.tr(), // ✅ مفتاح الترجمة
-                  style: textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurface.withValues(alpha: 0.7),
+           Align(
+              alignment: AlignmentDirectional.topEnd, // ✅ يتغير حسب اتجاه اللغة
+              child: Padding(
+                padding: const EdgeInsets.all(16.0), // بدل الـ top و right
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/home');
+                  },
+                  child: Text(
+                    'skip'.tr(),
+                    style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
                   ),
                 ),
               ),
@@ -36,19 +36,20 @@ class OnboardingScreen extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const SizedBox(height: 60),
+                      const SizedBox(height: 200),
                       Hero(
                         tag: 'logo', // ✅ نفس التاج يستخدم في كل الشاشات
                         child: Image.asset(
                           'assets/images/logo.png',
-                          width: 180,
-                          height: 180,
+                          width: 220,
+                          height: 220,
                         ),
                       ),
                       const SizedBox(height: 30),
                       Text(
                         'app_title'.tr(), // ✅ مفتاح الترجمة
-                        style: textTheme.headlineSmall?.copyWith(
+                        style: textTheme.headlineMedium?.copyWith(
+                          letterSpacing: 1.2,
                           color: scheme.onSurface,
                           fontWeight: FontWeight.bold,
                         ),
@@ -70,7 +71,7 @@ class OnboardingScreen extends StatelessWidget {
                       const SizedBox(height: 35),
                       Text(
                         'continue_with'.tr(), // ✅ مفتاح الترجمة
-                        style: textTheme.bodySmall?.copyWith(
+                        style: textTheme.bodyMedium?.copyWith(
                           color: scheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
@@ -151,7 +152,14 @@ class _AnimatedButtonState extends State<AnimatedButton> {
               elevation: 8,
             ),
             onPressed: widget.onPressed,
-            child: Text(widget.text),
+            child: Text(
+              widget.text,
+              style: const TextStyle(
+                fontSize: 16,        // ⬅️ هنا تحدد الحجم
+                fontWeight: FontWeight.w600,
+  ),
+),
+
           ),
         ),
       ),
@@ -182,9 +190,9 @@ class _InteractiveSocialIconState extends State<InteractiveSocialIcon> {
       child: Transform.scale(
         scale: _scale,
         child: CircleAvatar(
-          radius: 22,
+          radius: 26,
           backgroundColor: widget.color,
-          child: Icon(widget.icon, color: Colors.white, size: 22),
+          child: Icon(widget.icon, color: Colors.white, size: 26),
         ),
       ),
     );

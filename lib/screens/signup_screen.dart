@@ -49,7 +49,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: Column(
               children: [
                 _buildHeader(context),
-                const SizedBox(height: 10),
+                const SizedBox(height: 20),
 
                 Text(
                   'sign_up'.tr(),
@@ -59,11 +59,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 100),
 
                 _buildProfileImage(size),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 50),
 
                 _buildTextField('enter_your_name'.tr()),
                 _buildTextField('email'.tr()),
