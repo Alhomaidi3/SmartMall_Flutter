@@ -121,39 +121,81 @@ class MapMarker extends StatelessWidget {
 /// 🔹 Custom AppBar
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  const CustomAppBar({super.key, required this.title});
+  final bool showBackButton;
+  final List<String>? categories;
+  final ValueChanged<String>? onCategorySelected;
+
+  const CustomAppBar({
+    super.key,
+    required this.title,
+    this.showBackButton = false,
+    this.categories,
+    this.onCategorySelected,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+
     return AppBar(
-      backgroundColor: scheme.surface,   // ✅ بدل background
+      backgroundColor: scheme.surface,
       elevation: 0,
       centerTitle: true,
-      leading: Icon(Icons.menu, color: scheme.onSurface), // ✅ بدل onBackground
+
+      // 🔹 زر الفئات أو السهم في أقصى يسار (leading)
+      leading: (categories != null && categories!.isNotEmpty)
+          ? PopupMenuButton<String>(
+              icon: Icon(Icons.filter_list, color: scheme.onSurface),
+              onSelected: (value) {
+                if (onCategorySelected != null) {
+                  onCategorySelected!(value);
+                }
+              },
+              itemBuilder: (context) {
+                return [
+                  PopupMenuItem<String>(
+                    value: '',
+                    child: Text('all_categories'.tr()),
+                  ),
+                  ...categories!.map((cat) => PopupMenuItem<String>(
+                        value: cat,
+                        child: Text('${cat}_title'.tr()), // ✅ مترجم
+                      )),
+                ];
+              },
+            )
+          : showBackButton
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  color: scheme.onSurface,
+                  onPressed: () => Navigator.pop(context),
+                )
+              : null,
+
       title: Text(
         title,
         style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
-              color: scheme.onSurface,   // ✅ بدل onBackground
+              color: scheme.onSurface,
             ),
       ),
-      actions: [
-      Padding(
-        padding: const EdgeInsets.only(right: 12),
-        child: IconButton(
-          icon: CircleAvatar(
-            radius: 18,
-            backgroundColor: scheme.secondary,
-            child: Icon(Icons.person, color: scheme.onSecondary, size: 20),
-          ),
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, '/'); 
-          },
-        ),
-      ),
-    ],
 
+      // 🔹 الصورة الصغيرة في أقصى يمين
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: IconButton(
+            icon: CircleAvatar(
+              radius: 18,
+              backgroundColor: scheme.secondary,
+              child: Icon(Icons.person, color: scheme.onSecondary, size: 20),
+            ),
+            onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -161,33 +203,57 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
+
 /// 🔹 Custom Search Bar
 class CustomSearchBar extends StatelessWidget {
-  const CustomSearchBar({super.key});
+  final ValueChanged<String>? onChanged; // دالة البحث
+  final String? hintText;
+  final TextEditingController? controller; // ✅ أضفنا الـ controller
+
+  const CustomSearchBar({
+    super.key,
+    this.onChanged,
+    this.hintText,
+    this.controller,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: TextField(
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
+        controller: controller, // ✅ ربط الـ controller
+        onChanged: onChanged,
+        style: textTheme.bodyLarge?.copyWith(color: scheme.onSurface),
         decoration: InputDecoration(
-          hintText: 'search_hint'.tr(),
-          hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
-          prefixIcon: Icon(Icons.search, color: scheme.onSurface.withValues(alpha: 0.6)), // ✅ بدل withOpacity
+          hintText: hintText ?? 'search_hint'.tr(),
+          hintStyle: textTheme.bodyMedium?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
+          prefixIcon: Icon(Icons.search, color: scheme.primary),
           filled: true,
-          fillColor: scheme.surfaceContainerHighest, // ✅ بدل surfaceVariant
-          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          fillColor: scheme.surface,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(25),
+            borderSide: BorderSide(color: scheme.outline, width: 1.5),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25),
+            borderSide: BorderSide(color: scheme.outlineVariant, width: 1.5),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25),
+            borderSide: BorderSide(color: scheme.primary, width: 2),
           ),
         ),
       ),
     );
   }
 }
-
 /// 🔹 Custom Bottom Navigation Bar
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;

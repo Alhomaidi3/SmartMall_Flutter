@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import '/data/data.dart';
+import '/screens/store_details_screen.dart';
 import '/widgets/widgets.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -10,224 +12,209 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String searchQuery = '';
+  final TextEditingController searchController = TextEditingController(); // ✅ Controller
 
-  // استخدم getter بدل final لتطبيق الترجمة ديناميكيًا
-  List<Category> get categories => [
-        Category(
-          title: 'supermarkets_title'.tr(),
-          items: [
-            Store(name: 'lulu'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'carrefour'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'ramez'.tr(), image: 'assets/images/store3.png'),
-            Store(name: 'aljazira'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'ansar'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'market24'.tr(), image: 'assets/images/store3.png'),
-          ],
-        ),
-        Category(
-          title: 'shoes_title'.tr(),
-          items: [
-            Store(name: 'nike'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'adidas'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'skechers'.tr(), image: 'assets/images/store3.png'),
-            Store(name: 'puma'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'reebok'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'decathlon'.tr(), image: 'assets/images/store3.png'),
-          ],
-        ),
-        Category(
-          title: 'women_title'.tr(),
-          items: [
-            Store(name: 'zara'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'hm'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'mango'.tr(), image: 'assets/images/store3.png'),
-            Store(name: 'bershka'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'stradivarius'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'max'.tr(), image: 'assets/images/store3.png'),
-          ],
-        ),
-        Category(
-          title: 'men_title'.tr(),
-          items: [
-            Store(name: 'zara'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'hm'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'jack_jones'.tr(), image: 'assets/images/store3.png'),
-            Store(name: 'american_eagle'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'mango'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'centrepoint'.tr(), image: 'assets/images/store3.png'),
-          ],
-        ),
-        Category(
-          title: 'kids_title'.tr(),
-          items: [
-            Store(name: 'mothercare'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'babyshop'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'centrepoint'.tr(), image: 'assets/images/store3.png'),
-            Store(name: 'carters'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'chicco'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'toysrus'.tr(), image: 'assets/images/store3.png'),
-          ],
-        ),
-        Category(
-          title: 'perfumes_title'.tr(),
-          items: [
-            Store(name: 'sephora'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'faces'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'bodyshop'.tr(), image: 'assets/images/store3.png'),
-            Store(name: 'arabian_oud'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'abdulqurashi'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'ajmal'.tr(), image: 'assets/images/store3.png'),
-          ],
-        ),
-        Category(
-          title: 'restaurants_title'.tr(),
-          items: [
-            Store(name: 'mcd'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'kfc'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'pizzahut'.tr(), image: 'assets/images/store3.png'),
-            Store(name: 'herfy'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'dominos'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'local_restaurant'.tr(), image: 'assets/images/store3.png'),
-          ],
-        ),
-        Category(
-          title: 'cafes_title'.tr(),
-          items: [
-            Store(name: 'starbucks'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'dunkin'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'costa'.tr(), image: 'assets/images/store3.png'),
-            Store(name: 'cinnabon'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'krispy'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'local_cafe'.tr(), image: 'assets/images/store3.png'),
-          ],
-        ),
-        Category(
-          title: 'electronics_title'.tr(),
-          items: [
-            Store(name: 'extra'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'jarir'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'stc'.tr(), image: 'assets/images/store3.png'),
-            Store(name: 'batelco'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'zain'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'samsung'.tr(), image: 'assets/images/store3.png'),
-          ],
-        ),
-        Category(
-          title: 'home_title'.tr(),
-          items: [
-            Store(name: 'ikea'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'homecentre'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'homebox'.tr(), image: 'assets/images/store3.png'),
-            Store(name: 'daiso'.tr(), image: 'assets/images/store1.jpg'),
-            Store(name: 'miniso'.tr(), image: 'assets/images/store2.jpeg'),
-            Store(name: 'ansar'.tr(), image: 'assets/images/store3.png'),
-          ],
-        ),
-      ];
+  // 🔹 دالة لتحويل الحروف العربية إلى شكل موحد لتسهيل البحث
+  String normalize(String input) {
+    return input
+        .toLowerCase()
+        .replaceAll(RegExp(r'[أإآ]'), 'ا')
+        .replaceAll(RegExp(r'ى'), 'ي')
+        .replaceAll(RegExp(r'ؤ'), 'و')
+        .replaceAll(RegExp(r'ئ'), 'ي')
+        .replaceAll(RegExp(r'ّ'), '')
+        .replaceAll(RegExp(r'َ|ً|ُ|ٌ|ِ|ٍ|ْ'), '');
+  }
+
+  // 🔹 بناء التصنيفات مع البحث
+  List<Category> get categories {
+    final Map<String, List<StoreData>> grouped = {};
+    final query = normalize(searchQuery);
+
+    final filteredStores = storesData.where((store) {
+      final nameAr = normalize(store.nameAr);
+      final descAr = normalize(store.descriptionAr);
+      final nameEn = store.nameEn.toLowerCase();
+      final descEn = store.descriptionEn.toLowerCase();
+
+      return nameAr.contains(query) ||
+          descAr.contains(query) ||
+          nameEn.contains(query) ||
+          descEn.contains(query);
+    }).toList();
+
+    for (final store in filteredStores) {
+      grouped.putIfAbsent(store.category, () => []);
+      grouped[store.category]!.add(store);
+    }
+
+    return grouped.entries.map((entry) {
+      return Category(
+        title: '${entry.key}_title'.tr(),
+        items: entry.value,
+      );
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final cats = categories; // كل النصوص مترجمة حسب اللغة الحالية
+    final cats = categories;
+
+    // 🔹 استخراج جميع الفئات لتمريرها إلى AppBar
+    final allCategories = storesData.map((s) => s.category).toSet().toList();
 
     return Scaffold(
-      backgroundColor: scheme.surface,
-      appBar: CustomAppBar(title: 'smart_mall_guide'.tr()),
+      backgroundColor: scheme.background,
+      appBar: CustomAppBar(
+        title: 'smart_mall_guide'.tr(),
+        categories: allCategories,
+        onCategorySelected: (cat) {
+          setState(() {
+            searchQuery = cat;
+            // ✅ كتابة اسم الفئة داخل مربع البحث
+            searchController.text = cat.isEmpty ? '' : '${cat}_title'.tr();
+          });
+        },
+      ),
       body: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.all(12),
-            child: CustomSearchBar(),
+          // 🔹 مربع البحث (مستقل من widgets.dart)
+          CustomSearchBar(
+            controller: searchController, // ✅ مرر الـ controller
+            onChanged: (value) => setState(() => searchQuery = value),
           ),
+
+          // 🔹 قائمة المتاجر
           Expanded(
-            child: ListView.builder(
-              itemCount: cats.length,
-              itemBuilder: (context, index) {
-                final category = cats[index];
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: Text(
-                        category.title,
-                        style: textTheme.bodyLarge?.copyWith(
-                          color: scheme.onSurface,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+            child: cats.isEmpty
+                ? Center(
+                    child: Text(
+                      'no_results'.tr(),
+                      style: textTheme.bodyLarge,
                     ),
-                    SizedBox(
-                      height: 170,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: category.items.length,
-                        itemBuilder: (context, i) {
-                          return Padding(
-                            padding: EdgeInsetsDirectional.only(
-                              start: i == 0 ? 16 : 10,
-                              end: i == category.items.length - 1 ? 16 : 0,
+                  )
+                : ListView.builder(
+                    itemCount: cats.length,
+                    itemBuilder: (context, index) {
+                      final category = cats[index];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            child: Text(
+                              category.title,
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: scheme.onSurface,
+                              ),
                             ),
-                            child: StoreCard(store: category.items[i]),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
+                          ),
+                          SizedBox(
+                            height: 200,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: category.items.length,
+                              itemBuilder: (context, i) {
+                                final store = category.items[i];
+                                return Padding(
+                                  padding: EdgeInsetsDirectional.only(
+                                    start: i == 0 ? 16 : 10,
+                                    end: i == category.items.length - 1 ? 16 : 0,
+                                  ),
+                                  child: StoreCard(store: store),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
           ),
         ],
       ),
     );
   }
 }
-
-class StoreCard extends StatelessWidget {
-  final Store store;
-
+// 🔹 بطاقة المتجر مع تصميم أجمل
+class StoreCard extends StatefulWidget {
+  final StoreData store;
   const StoreCard({super.key, required this.store});
+
+  @override
+  State<StoreCard> createState() => _StoreCardState();
+}
+
+class _StoreCardState extends State<StoreCard> {
+  double _scale = 1.0;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final locale = context.locale.languageCode;
 
-    return Container(
-      width: 120,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        image: DecorationImage(
-          image: AssetImage(store.image),
-          fit: BoxFit.cover,
-        ),
-        border: Border.all(color: Colors.black, width: 2),
-      ),
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: Container(
-          height: 32,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.grey[800]
-                : Colors.grey[200],
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(15),
-              bottomRight: Radius.circular(15),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _scale = 0.95),
+        onTapUp: (_) => setState(() => _scale = 1.0),
+        onTapCancel: () => setState(() => _scale = 1.0),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => StoreDetailsScreen(store: widget.store),
             ),
-            border: const Border(
-              top: BorderSide(color: Colors.black, width: 1),
+          );
+        },
+        child: AnimatedScale(
+          scale: _scale,
+          duration: const Duration(milliseconds: 150),
+          child: Container(
+            width: 140,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 6,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              image: DecorationImage(
+                image: NetworkImage(widget.store.image),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                    Colors.black.withOpacity(0.1), BlendMode.darken),
+              ),
             ),
-          ),
-          child: Text(
-            store.name,
-            style: textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white
-                  : Colors.black,
-              fontWeight: FontWeight.w600,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.6),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  locale == 'ar'
+                      ? widget.store.nameAr
+                      : widget.store.nameEn,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ),
           ),
         ),
@@ -236,16 +223,9 @@ class StoreCard extends StatelessWidget {
   }
 }
 
-class Store {
-  final String name;
-  final String image;
-
-  Store({required this.name, required this.image});
-}
-
+// 🔹 تصنيف المتاجر
 class Category {
   final String title;
-  final List<Store> items;
-
+  final List<StoreData> items;
   Category({required this.title, required this.items});
 }

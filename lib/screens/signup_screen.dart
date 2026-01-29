@@ -248,29 +248,40 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
     );
   }
+  double _scale = 1.0;
 
   Widget _buildCreateAccountButton() {
-    final scheme = Theme.of(context).colorScheme;
-    return SizedBox(
-      height: 50,
-      width: 250,
-      child: ElevatedButton(
-        onPressed: () {},
-        style: ElevatedButton.styleFrom(
-          backgroundColor: scheme.primary,
-          foregroundColor: scheme.onPrimary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+  final scheme = Theme.of(context).colorScheme;
+
+  return GestureDetector(
+    onTapDown: (_) => setState(() => _scale = 0.95),
+    onTapUp: (_) => setState(() => _scale = 1.0),
+    onTapCancel: () => setState(() => _scale = 1.0),
+    child: Transform.scale(
+      scale: _scale,
+      child: SizedBox(
+        height: 50,
+        width: 250,
+        child: ElevatedButton(
+          onPressed: () {}, // ما غيرناه
+          style: ElevatedButton.styleFrom(
+            backgroundColor: scheme.primary,
+            foregroundColor: scheme.onPrimary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+            textStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          child: Text('create_account'.tr()),
         ),
-        child: Text('create_account'.tr()),
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Future<void> _pickDate() async {
     final date = await showDatePicker(
