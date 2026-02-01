@@ -5,7 +5,11 @@ import '/screens/store_details_screen.dart';
 import '/widgets/widgets.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback onProfilePressed; 
+  const HomeScreen({
+    super.key,
+    required this.onProfilePressed,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -78,16 +82,17 @@ class _HomeScreenState extends State<HomeScreen> {
             searchController.text = cat.isEmpty ? '' : '${cat}_title'.tr();
           });
         },
+        onProfilePressed: widget.onProfilePressed,
       ),
       body: Column(
         children: [
-          // 🔹 مربع البحث (مستقل من widgets.dart)
+          // 🔹 مربع البحث
           CustomSearchBar(
-            controller: searchController, // ✅ مرر الـ controller
+            controller: searchController,
             onChanged: (value) => setState(() => searchQuery = value),
           ),
 
-          // 🔹 قائمة المتاجر
+          // 🔹 قائمة المتاجر حسب الفئات
           Expanded(
             child: cats.isEmpty
                 ? Center(
@@ -141,7 +146,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-// 🔹 بطاقة المتجر مع تصميم أجمل
+
+// 🔹 بطاقة المتجر مع تأثير الضغط
 class StoreCard extends StatefulWidget {
   final StoreData store;
   const StoreCard({super.key, required this.store});
@@ -203,9 +209,7 @@ class _StoreCardState extends State<StoreCard> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  locale == 'ar'
-                      ? widget.store.nameAr
-                      : widget.store.nameEn,
+                  locale == 'ar' ? widget.store.nameAr : widget.store.nameEn,
                   style: textTheme.bodyMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,

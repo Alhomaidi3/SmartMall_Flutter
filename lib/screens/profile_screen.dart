@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import 'account_screen.dart';
+import 'favorites_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   final void Function(bool) onThemeChanged;
@@ -8,6 +12,53 @@ class ProfileScreen extends StatelessWidget {
     super.key,
     required this.onThemeChanged,
   });
+  Future<void> _launchUrl(BuildContext context, String url) async {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final textColor = isDark ? Colors.white : Colors.black;
+
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('confirmation'.tr()),
+      content: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: 'open_link_confirmation'.tr() + '\n',  // إضافة فاصل بين النص والرابط
+              style: TextStyle(color: textColor),
+            ),
+            TextSpan(
+              text: url,  // الرابط الفعلي
+              style: TextStyle(color: Colors.blue),  // استخدام اللون المناسب
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text('cancel'.tr()),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: Text('ok'.tr()),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmed ?? false) {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('cannot_launch'.tr())),
+      );
+    }
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +91,7 @@ class ProfileScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey[900] : Colors.grey[100],
+                color: isDark ? Colors.grey[850] : Colors.grey[200],
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
@@ -92,14 +143,25 @@ class ProfileScreen extends StatelessWidget {
               icon: Icons.person_outline,
               title: 'my_account'.tr(),
               subtitle: 'make_changes_account'.tr(),
-              trailing: const Icon(Icons.warning, color: Colors.red, size: 18),
               isDark: isDark,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AccountScreen()),
+                );
+              },
             ),
             SettingsTile(
               icon: Icons.bookmark_border,
               title: 'saved_beneficiary'.tr(),
               subtitle: 'manage_saved_account'.tr(),
               isDark: isDark,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+                );
+              },
             ),
 
             /// 🎨 Appearance
@@ -107,12 +169,12 @@ class ProfileScreen extends StatelessWidget {
               icon: Icons.color_lens_outlined,
               title: 'appearance'.tr(),
               subtitle: 'switch_theme'.tr(),
+              isDark: isDark,
               trailing: Switch(
                 value: isDark,
                 onChanged: onThemeChanged,
                 activeThumbColor: Colors.orange,
               ),
-              isDark: isDark,
             ),
 
             /// 🌐 Language
@@ -120,6 +182,7 @@ class ProfileScreen extends StatelessWidget {
               icon: Icons.language,
               title: 'language'.tr(),
               subtitle: 'change_language'.tr(),
+              isDark: isDark,
               trailing: DropdownButton<String>(
                 value: context.locale.languageCode,
                 underline: const SizedBox(),
@@ -133,7 +196,7 @@ class ProfileScreen extends StatelessWidget {
                   }
                 },
               ),
-              isDark: isDark,
+              onTap: null, // هنا نلغي الضغط على Tile كله
             ),
 
             SettingsTile(
@@ -141,6 +204,9 @@ class ProfileScreen extends StatelessWidget {
               title: 'logout'.tr(),
               subtitle: 'signout_account'.tr(),
               isDark: isDark,
+              onTap: () {
+                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+              },
             ),
 
             const SizedBox(height: 24),
@@ -160,11 +226,13 @@ class ProfileScreen extends StatelessWidget {
               icon: Icons.help_outline,
               title: 'help_support'.tr(),
               isDark: isDark,
+              onTap: () => _launchUrl(context, 'https://www.google.com'),
             ),
             SettingsTile(
               icon: Icons.info_outline,
               title: 'about_app'.tr(),
               isDark: isDark,
+              onTap: () => _launchUrl(context, 'https://www.google.com'),
             ),
           ],
         ),
@@ -173,13 +241,14 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-/// 🔹 Settings Tile Widget
-class SettingsTile extends StatelessWidget {
+/// 🎨 Interactive Settings Tile with full tap support
+class SettingsTile extends StatefulWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
   final Widget? trailing;
-  final bool isDark; // ✅ جديد
+  final bool isDark;
+  final VoidCallback? onTap;
 
   const SettingsTile({
     super.key,
@@ -188,52 +257,89 @@ class SettingsTile extends StatelessWidget {
     this.subtitle,
     this.trailing,
     required this.isDark,
+    this.onTap,
   });
+
+  @override
+  State<SettingsTile> createState() => _SettingsTileState();
+}
+
+class _SettingsTileState extends State<SettingsTile> {
+  double _scale = 1.0;
+
+  void _onTapDown(TapDownDetails _) => setState(() => _scale = 0.95);
+  void _onTapUp(TapUpDetails _) => setState(() => _scale = 1.0);
+  void _onTapCancel() => setState(() => _scale = 1.0);
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[850] : Colors.grey[200],
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: scheme.onSurface),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: (details) {
+        _onTapUp(details);
+
+        if (widget.trailing is Switch) {
+          final switchWidget = widget.trailing as Switch;
+          switchWidget.onChanged?.call(!switchWidget.value);
+        }
+
+        // فقط نفذ onTap إذا موجود
+        if (widget.onTap != null) {
+          widget.onTap!();
+        }
+      },
+
+        onTapCancel: _onTapCancel,
+        child: AnimatedScale(
+          scale: _scale,
+          duration: const Duration(milliseconds: 100),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: widget.isDark ? Colors.grey[850] : Colors.grey[200],
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: scheme.onSurface,
-                    fontWeight: FontWeight.w600,
+                Icon(widget.icon, color: scheme.onSurface),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.title,
+                        style: TextStyle(
+                          color: scheme.onSurface,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (widget.subtitle != null)
+                        Text(
+                          widget.subtitle!,
+                          style: TextStyle(
+                            color: scheme.onSurface.withOpacity(0.7),
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                if (subtitle != null)
-                  Text(
-                    subtitle!,
-                    style: TextStyle(
-                      color: scheme.onSurface.withOpacity(0.7),
-                      fontSize: 12,
+                widget.trailing ??
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
+                      color: scheme.onSurface.withOpacity(0.6),
                     ),
-                  ),
               ],
             ),
           ),
-          trailing ??
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 14,
-                color: scheme.onSurface.withOpacity(0.6),
-              ),
-        ],
+        ),
       ),
     );
   }

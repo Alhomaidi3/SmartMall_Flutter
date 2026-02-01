@@ -12,7 +12,7 @@
   "map": "الخريطة",
   "profile": "الملف الشخصي",
   "my_account": "حسابي",
-  "saved_beneficiary": "المستفيدون المحفوظون",
+  "saved_beneficiary": "المتاجر المفضلة",
   "appearance": "المظهر",
   "language": "اللغة",
   "logout": "تسجيل الخروج",
@@ -46,8 +46,8 @@
   "category_accessories": "إكسسوارات",
 
   "account": "حسابي",
-  "make_changes_account": "تعديل حسابك",
-  "manage_saved_account": "إدارة الحسابات المحفوظة",
+  "make_changes_account": "تعديل المعلومات",
+  "manage_saved_account": "إدارة المتاجر المفضلة",
   "switch_theme": "تغيير المظهر",
   "change_language": "تغيير اللغة",
   "signout_account": "تسجيل الخروج",
@@ -66,5 +66,35 @@
   "electronics_title": "📱 الإلكترونيات والهواتف",
   "home_title": "🏠 المنزل والهدايا",
   "no_results" : "لا توجد نتائج" ,
-  "all_categories": "جميع الفئات"
+  "all_categories": "جميع الفئات",
+  
+  "account_settings": "معلومات الحساب",
+  "Phone Number": "رقم الهاتف",
+  "Gender": "الجنس",
+  "Date of Birth": "تاريخ الميلاد",
+  "edit_profile": "تعديل الملف الشخصي",
+  "change_password": "تغيير كلمة المرور",
+  "notifications": "إدارة الإشعارات",
+
+  "edit_favorites": "تعديل المفضلات",
+  "remove_favorites": "إزالة المتاجر المفضلة",
+
+  "confirmation": "تأكيد",
+  "open_link_confirmation": "هل أنت متأكد أنك تريد فتح هذا الرابط؟",
+  "cancel": "إلغاء",
+  "ok": "موافق",
+
+  "Category": "الفئة",
+  "Floor": "الطابق",
+  "Rating": "التقييم",
+  "Phone": "الهاتف",
+  "Website": "الموقع الإلكتروني",
+  "luxury": "فاخر",
+  "wifi": "واي فاي",
+  "open_time": "وقت الفتح",
+  "close_time": "وقت الإغلاق"
 }
+
+
+
+

@@ -12,7 +12,7 @@
   "map": "Map",
   "profile": "Profile",
   "my_account": "My Account",
-  "saved_beneficiary": "Saved Beneficiary",
+  "saved_beneficiary": "Favorites Store",
   "appearance": "Appearance",
   "language": "Language",
   "logout": "Log out",
@@ -66,6 +66,32 @@
   "electronics_title": "📱 Electronics & Mobile Stores",
   "home_title": "🏠 Home & Gifts",
   "no_results" : "No results" ,
-  "all_categories": "All categories"
+  "all_categories": "All categories",
+  
+  "account_settings": "Personal Info",
+  "Phone Number": "Phone Number",
+  "Gender": "Gender",
+  "Date of Birth": "Date of Birth",
+  "edit_profile": "Edit Profile Info",
+  "change_password": "Change Password",
+  "notifications": "Manage Notifications",
 
+  "edit_favorites": "Edit Favorites",
+  "remove_favorites": "Remove all Favorites",
+
+  "confirmation": "Confirmation",
+  "open_link_confirmation": "Are you sure you want to open this link?",
+  "cancel": "Cancel",
+  "ok": "OK",
+
+  "Category": "Category",
+  "Floor": "Floor",
+  "Rating": "Rating",
+  "Phone": "Phone",
+  "Website": "Website",
+  "luxury": "Luxury",
+  "wifi": "Wi-Fi",
+  "open_time": "Open Time",
+  "close_time": "Close Time"
 }
+

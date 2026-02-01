@@ -74,9 +74,9 @@ class MapChip extends StatelessWidget {
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.6), // ✅ بدل withOpacity
+        color: scheme.primary.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: scheme.onPrimary.withValues(alpha: 0.2)), // ✅ بدل withOpacity
+        border: Border.all(color: scheme.onPrimary.withValues(alpha: 0.2)),
       ),
       alignment: Alignment.center,
       child: Text(
@@ -104,7 +104,7 @@ class MapMarker extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.primary,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: scheme.onPrimary.withValues(alpha: 0.2)), // ✅ بدل withOpacity
+        border: Border.all(color: scheme.onPrimary.withValues(alpha: 0.2)),
       ),
       child: Text(
         label,
@@ -124,6 +124,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showBackButton;
   final List<String>? categories;
   final ValueChanged<String>? onCategorySelected;
+  final VoidCallback? onProfilePressed;
+  final bool showProfileIcon;  // خاصية جديدة للتحكم في إظهار أيقونة الملف الشخصي
 
   const CustomAppBar({
     super.key,
@@ -131,6 +133,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.showBackButton = false,
     this.categories,
     this.onCategorySelected,
+    this.onProfilePressed,
+    this.showProfileIcon = true,  // القيمة الافتراضية هي true
   });
 
   @override
@@ -141,8 +145,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: scheme.surface,
       elevation: 0,
       centerTitle: true,
-
-      // 🔹 زر الفئات أو السهم في أقصى يسار (leading)
       leading: (categories != null && categories!.isNotEmpty)
           ? PopupMenuButton<String>(
               icon: Icon(Icons.filter_list, color: scheme.onSurface),
@@ -153,13 +155,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               },
               itemBuilder: (context) {
                 return [
-                  PopupMenuItem<String>(
-                    value: '',
-                    child: Text('all_categories'.tr()),
-                  ),
+                  PopupMenuItem<String>(value: '', child: Text('all_categories'.tr())),
                   ...categories!.map((cat) => PopupMenuItem<String>(
                         value: cat,
-                        child: Text('${cat}_title'.tr()), // ✅ مترجم
+                        child: Text('${cat}_title'.tr()),
                       )),
                 ];
               },
@@ -171,7 +170,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   onPressed: () => Navigator.pop(context),
                 )
               : null,
-
       title: Text(
         title,
         style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -179,22 +177,19 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               color: scheme.onSurface,
             ),
       ),
-
-      // 🔹 الصورة الصغيرة في أقصى يمين
       actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: IconButton(
-            icon: CircleAvatar(
-              radius: 18,
-              backgroundColor: scheme.secondary,
-              child: Icon(Icons.person, color: scheme.onSecondary, size: 20),
+        if (showProfileIcon) // إذا كانت showProfileIcon صحيحة، سنعرض أيقونة الملف الشخصي
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: IconButton(
+              icon: CircleAvatar(
+                radius: 18,
+                backgroundColor: scheme.secondary,
+                child: Icon(Icons.person, color: scheme.onSecondary, size: 20),
+              ),
+              onPressed: onProfilePressed,
             ),
-            onPressed: () {
-              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-            },
           ),
-        ),
       ],
     );
   }
@@ -203,12 +198,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
-
 /// 🔹 Custom Search Bar
 class CustomSearchBar extends StatelessWidget {
-  final ValueChanged<String>? onChanged; // دالة البحث
+  final ValueChanged<String>? onChanged;
   final String? hintText;
-  final TextEditingController? controller; // ✅ أضفنا الـ controller
+  final TextEditingController? controller;
 
   const CustomSearchBar({
     super.key,
@@ -225,7 +219,7 @@ class CustomSearchBar extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: TextField(
-        controller: controller, // ✅ ربط الـ controller
+        controller: controller,
         onChanged: onChanged,
         style: textTheme.bodyLarge?.copyWith(color: scheme.onSurface),
         decoration: InputDecoration(
@@ -254,6 +248,7 @@ class CustomSearchBar extends StatelessWidget {
     );
   }
 }
+
 /// 🔹 Custom Bottom Navigation Bar
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -270,7 +265,9 @@ class CustomBottomNavBar extends StatelessWidget {
         if (index == 0) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const HomeScreen()),
+            MaterialPageRoute(
+              builder: (_) => HomeScreen(onProfilePressed: () {}),
+            ),
           );
         } else if (index == 1) {
           Navigator.pushReplacement(
