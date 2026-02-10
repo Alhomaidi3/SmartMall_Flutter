@@ -92,7 +92,9 @@
   "luxury": "فاخر",
   "wifi": "واي فاي",
   "open_time": "وقت الفتح",
-  "close_time": "وقت الإغلاق"
+  "close_time": "وقت الإغلاق",
+  "logout_confirmation": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+  "store_details": "تفاصيل المتجر"
 }
 
 

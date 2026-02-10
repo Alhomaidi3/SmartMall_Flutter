@@ -45,7 +45,6 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 24),
 
             // 👤 Store Info Card (اسم المتجر + الوصف)
             Container(
@@ -91,7 +90,7 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
               ),
             ),
 
-            const SizedBox(height: 36),
+            const SizedBox(height: 24),
 
             Text(
               'store_details'.tr(),

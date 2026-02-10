@@ -8,12 +8,14 @@ class MapScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: scheme.surface,
       appBar: CustomAppBar(title: 'smart_mall_guide'.tr()),
       body: Stack(
         children: [
+          // 🗺️ الخريطة التفاعلية
           Positioned.fill(
             child: InteractiveViewer(
               panEnabled: true,
@@ -21,12 +23,16 @@ class MapScreen extends StatelessWidget {
               maxScale: 4.0,
               child: Stack(
                 children: [
+                  // صورة الخريطة حسب الثيم
                   Positioned.fill(
                     child: Image.asset(
-                      'assets/images/map.png',
+                      isDark
+                          ? 'assets/images/map.png'   // Dark Mode
+                          : 'assets/images/map2.png', // Light Mode
                       fit: BoxFit.cover,
                     ),
                   ),
+
                   /// 📍 Store Markers
                   Positioned(
                       top: 260,
@@ -44,12 +50,16 @@ class MapScreen extends StatelessWidget {
               ),
             ),
           ),
+
+          // 🔍 شريط البحث
           const Positioned(
             top: 12,
             left: 12,
             right: 12,
             child: CustomSearchBar(),
           ),
+
+          // 🏷️ قائمة الفلاتر (Chips)
           Positioned(
             top: 80,
             left: 0,
@@ -69,6 +79,8 @@ class MapScreen extends StatelessWidget {
               ),
             ),
           ),
+
+          // 📌 Floating Action Buttons
           Positioned(
             right: 16,
             bottom: 120,
@@ -77,14 +89,18 @@ class MapScreen extends StatelessWidget {
                 FloatingActionButton(
                   mini: true,
                   backgroundColor: scheme.primary,
-                  onPressed: () {},
+                  onPressed: () {
+                    // Action: انتقل لموقعي
+                  },
                   child: Icon(Icons.my_location, color: scheme.onPrimary),
                 ),
                 const SizedBox(height: 10),
                 FloatingActionButton(
                   mini: true,
                   backgroundColor: scheme.primary,
-                  onPressed: () {},
+                  onPressed: () {
+                    // Action: تغيير طبقات الخريطة
+                  },
                   child: Icon(Icons.layers, color: scheme.onPrimary),
                 ),
               ],

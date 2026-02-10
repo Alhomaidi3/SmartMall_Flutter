@@ -21,7 +21,7 @@ class OnboardingScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16.0), // بدل الـ top و right
                 child: TextButton(
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
                   ),
                   onPressed: () {
                     Navigator.pushReplacementNamed(context, '/home');

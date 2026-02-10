@@ -59,6 +59,37 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
+Future<bool> _confirmAction(
+  BuildContext context, {
+  required String title,
+  required String message,
+}) async {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final textColor = isDark ? Colors.white : Colors.black;
+
+  final result = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(title.tr()),
+      content: Text(
+        message.tr(),
+        style: TextStyle(color: textColor),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text('cancel'.tr()),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: Text('ok'.tr()),
+        ),
+      ],
+    ),
+  );
+
+  return result ?? false;
+}
 
   @override
   Widget build(BuildContext context) {
@@ -204,10 +235,23 @@ class ProfileScreen extends StatelessWidget {
               title: 'logout'.tr(),
               subtitle: 'signout_account'.tr(),
               isDark: isDark,
-              onTap: () {
-                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+              onTap: () async {
+                final confirmed = await _confirmAction(
+                  context,
+                  title: 'confirmation',
+                  message: 'logout_confirmation',
+                );
+
+                if (confirmed) {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/',
+                    (route) => false,
+                  );
+                }
               },
             ),
+
 
             const SizedBox(height: 24),
 

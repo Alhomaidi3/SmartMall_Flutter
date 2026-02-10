@@ -92,6 +92,8 @@
   "luxury": "Luxury",
   "wifi": "Wi-Fi",
   "open_time": "Open Time",
-  "close_time": "Close Time"
+  "close_time": "Close Time",
+  "logout_confirmation": "Are you sure you want to log out?",
+  "store_details": "Store Details"
 }
 
