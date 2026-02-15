@@ -3,7 +3,9 @@ import 'package:easy_localization/easy_localization.dart';
 import '/widgets/widgets.dart';
 
 class MapScreen extends StatelessWidget {
-  const MapScreen({super.key});
+  final VoidCallback onProfilePressed; // ✅ يجب أن تكون موجودة
+
+  const MapScreen({super.key, required this.onProfilePressed}); // ✅ required
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +14,11 @@ class MapScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: scheme.surface,
-      appBar: CustomAppBar(title: 'smart_mall_guide'.tr()),
+      appBar: CustomAppBar(
+        title: 'smart_mall_guide'.tr(),
+        showBackButton: false,
+  showProfileIcon: true,
+  onProfilePressed: onProfilePressed,       ),
       body: Stack(
         children: [
           // 🗺️ الخريطة التفاعلية

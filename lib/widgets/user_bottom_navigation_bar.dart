@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'home_screen.dart';
-import 'map_screen.dart';
-import 'profile_screen.dart';
+import '../screens/user/home_screen.dart';
+import '../screens/user/map_screen.dart';
+import '../screens/user/profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
   final void Function(bool) onThemeChanged;
@@ -10,28 +10,34 @@ class MainScreen extends StatefulWidget {
   const MainScreen({super.key, required this.onThemeChanged});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  State<MainScreen> createState() => MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class MainScreenState extends State<MainScreen> {
   int currentIndex = 0;
 
   late final List<Widget> pages;
+
+  void changeTab(int index) {
+    setState(() {
+      currentIndex = index;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     pages = [
-      HomeScreen(onProfilePressed: _goToProfile),
-      const MapScreen(),
-      ProfileScreen(onThemeChanged: widget.onThemeChanged),
+      HomeScreen(
+        onProfilePressed: () => changeTab(2), // ✅ الذهاب للبروفايل
+      ),
+      MapScreen(
+        onProfilePressed: () => changeTab(2), // ✅ الذهاب للبروفايل
+      ),
+      ProfileScreen(
+        onThemeChanged: widget.onThemeChanged,
+      ),
     ];
-  }
-
-  void _goToProfile() {
-    setState(() {
-      currentIndex = 2;
-    });
   }
 
   @override
@@ -51,9 +57,7 @@ class _MainScreenState extends State<MainScreen> {
             isDark ? Colors.grey[500] : scheme.onSurface.withOpacity(0.6),
         currentIndex: currentIndex,
         onTap: (index) {
-          setState(() {
-            currentIndex = index;
-          });
+          changeTab(index); // ✅ استخدام الدالة نفسها
         },
         items: [
           BottomNavigationBarItem(

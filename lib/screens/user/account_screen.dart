@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'profile_screen.dart'; // لاستدعاء SettingsTile
 import '/widgets/widgets.dart';
 
 class AccountScreen extends StatelessWidget {
@@ -9,7 +8,6 @@ class AccountScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final scheme = Theme.of(context).colorScheme;  // استرجاع الـ colorScheme
 
     // البيانات التي تم إدخالها في التسجيل
     final String username = 'UserName'.tr();  // اسم المستخدم

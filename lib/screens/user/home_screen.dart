@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '/data/data.dart';
-import '/screens/store_details_screen.dart';
+import 'store_details_screen.dart';
 import '/widgets/widgets.dart';
 
 class HomeScreen extends StatefulWidget {

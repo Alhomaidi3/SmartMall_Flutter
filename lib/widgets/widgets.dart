@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import '../screens/home_screen.dart';
-import '../screens/map_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
+export 'settings_tile.dart';
+export 'user_bottom_navigation_bar.dart';
+export 'admin_bottom_navigation_bar.dart';
+export 'custom_app_bar.dart';
+
 
 /// 🔹 Main Button
 class MainButton extends StatelessWidget {
@@ -118,86 +121,6 @@ class MapMarker extends StatelessWidget {
   }
 }
 
-/// 🔹 Custom AppBar
-class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  final bool showBackButton;
-  final List<String>? categories;
-  final ValueChanged<String>? onCategorySelected;
-  final VoidCallback? onProfilePressed;
-  final bool showProfileIcon;  // خاصية جديدة للتحكم في إظهار أيقونة الملف الشخصي
-
-  const CustomAppBar({
-    super.key,
-    required this.title,
-    this.showBackButton = false,
-    this.categories,
-    this.onCategorySelected,
-    this.onProfilePressed,
-    this.showProfileIcon = true,  // القيمة الافتراضية هي true
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppBar(
-      backgroundColor: scheme.surface,
-      elevation: 0,
-      centerTitle: true,
-      leading: (categories != null && categories!.isNotEmpty)
-          ? PopupMenuButton<String>(
-              icon: Icon(Icons.filter_list, color: scheme.onSurface),
-              onSelected: (value) {
-                if (onCategorySelected != null) {
-                  onCategorySelected!(value);
-                }
-              },
-              itemBuilder: (context) {
-                return [
-                  PopupMenuItem<String>(value: '', child: Text('all_categories'.tr())),
-                  ...categories!.map((cat) => PopupMenuItem<String>(
-                        value: cat,
-                        child: Text('${cat}_title'.tr()),
-                      )),
-                ];
-              },
-            )
-          : showBackButton
-              ? IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  color: scheme.onSurface,
-                  onPressed: () => Navigator.pop(context),
-                )
-              : null,
-      title: Text(
-        title,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: scheme.onSurface,
-            ),
-      ),
-      actions: [
-        if (showProfileIcon) // إذا كانت showProfileIcon صحيحة، سنعرض أيقونة الملف الشخصي
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: IconButton(
-              icon: CircleAvatar(
-                radius: 18,
-                backgroundColor: scheme.secondary,
-                child: Icon(Icons.person, color: scheme.onSecondary, size: 20),
-              ),
-              onPressed: onProfilePressed,
-            ),
-          ),
-      ],
-    );
-  }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
-}
-
 /// 🔹 Custom Search Bar
 class CustomSearchBar extends StatelessWidget {
   final ValueChanged<String>? onChanged;
@@ -249,40 +172,3 @@ class CustomSearchBar extends StatelessWidget {
   }
 }
 
-/// 🔹 Custom Bottom Navigation Bar
-class CustomBottomNavBar extends StatelessWidget {
-  final int currentIndex;
-  const CustomBottomNavBar({super.key, required this.currentIndex});
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      backgroundColor: Colors.black,
-      selectedItemColor: Colors.white,
-      unselectedItemColor: Colors.white70,
-      currentIndex: currentIndex,
-      onTap: (index) {
-        if (index == 0) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => HomeScreen(onProfilePressed: () {}),
-            ),
-          );
-        } else if (index == 1) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const MapScreen()),
-          );
-        } else if (index == 2) {
-          Navigator.pushReplacementNamed(context, '/home');
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.map_outlined), label: 'Map'),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
-      ],
-    );
-  }
-}

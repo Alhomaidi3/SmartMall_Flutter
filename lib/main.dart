@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-import 'screens/login_screen.dart';
-import 'screens/signup_screen.dart';
-import 'screens/onboarding_screen.dart';
-import 'screens/main_screen.dart';
+import 'screens/user/login_screen.dart';
+import 'screens/user/signup_screen.dart';
+import 'screens/user/onboarding_screen.dart';
+import 'widgets/user_bottom_navigation_bar.dart';              // ✅ تصحيح المسار
+import 'widgets/admin_bottom_navigation_bar.dart';
+import 'screens/admin/store_edit_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,6 +57,9 @@ class _MyAppState extends State<MyApp> {
           onSecondary: Colors.white,
           surface: Colors.white,
           onSurface: Colors.black,
+          outline: Color(0xFFE0E0E0),
+          outlineVariant: Color(0xFFF5F5F5),
+          surfaceContainerHighest: Color(0xFFF5F5F5),
         ),
         scaffoldBackgroundColor: Colors.white,
         appBarTheme: const AppBarTheme(
@@ -78,6 +83,9 @@ class _MyAppState extends State<MyApp> {
           onSecondary: Colors.white,
           surface: Colors.black,
           onSurface: Colors.white,
+          outline: Color(0xFF424242),
+          outlineVariant: Color(0xFF303030),
+          surfaceContainerHighest: Color(0xFF1E1E1E),
         ),
         scaffoldBackgroundColor: Colors.black,
         appBarTheme: const AppBarTheme(
@@ -93,18 +101,46 @@ class _MyAppState extends State<MyApp> {
 
       themeMode: _themeMode,
 
-      /// ✅ EasyLocalization (المصدر الوحيد)
+      /// ✅ EasyLocalization
       locale: context.locale,
       supportedLocales: context.supportedLocales,
       localizationsDelegates: context.localizationDelegates,
 
-      routes: {
-        '/': (_) => const OnboardingScreen(),
-        '/login': (_) => const LoginScreen(),
-        '/signup': (_) => const SignUpScreen(),
-        '/home': (_) => MainScreen(
-              onThemeChanged: _toggleTheme,
-            ),
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/':
+            return MaterialPageRoute(builder: (_) => const OnboardingScreen());
+          
+          case '/login':
+            return MaterialPageRoute(builder: (_) => const LoginScreen());
+          
+          case '/signup':
+            return MaterialPageRoute(builder: (_) => const SignUpScreen());
+          
+          case '/home':
+          case '/main':
+            return MaterialPageRoute(
+              builder: (_) => MainScreen(
+                onThemeChanged: _toggleTheme,
+              ),
+            );
+          
+          // ✅ بروفايل المستخدم العادي
+          
+          // ✅ Routes الأدمن
+case '/admin':
+  return MaterialPageRoute(
+    builder: (_) => AdminMainScreen(
+      onThemeChanged: _toggleTheme,  // ✅ تمرر الدالة
+    ),
+  );
+          
+          case '/admin/stores/add':
+            return MaterialPageRoute(builder: (_) => const StoreEditScreen());
+          
+          default:
+            return MaterialPageRoute(builder: (_) => const OnboardingScreen());
+        }
       },
     );
   }

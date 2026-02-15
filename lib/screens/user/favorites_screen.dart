@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'profile_screen.dart'; // لاستدعاء SettingsTile
 import '/widgets/widgets.dart';
 
 class FavoritesScreen extends StatelessWidget {
@@ -95,14 +94,6 @@ class FavoritesScreen extends StatelessWidget {
               isDark: isDark,
               onTap: () {
                 // Navigation لإزالة المفضلات
-              },
-            ),
-            SettingsTile(
-              icon: Icons.notifications,
-              title: 'favorite_notifications'.tr(),
-              isDark: isDark,
-              onTap: () {
-                // Navigation لإعدادات إشعارات المفضلات
               },
             ),
           ],

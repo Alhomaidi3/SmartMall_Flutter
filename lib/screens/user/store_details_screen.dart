@@ -90,7 +90,7 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
 
             Text(
               'store_details'.tr(),
@@ -122,7 +122,7 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 18),
 
             // عرض رقم الهاتف
             Card(
@@ -137,7 +137,7 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 18),
 
             // عرض الموقع الإلكتروني
             Card(

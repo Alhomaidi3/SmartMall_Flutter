@@ -91,13 +91,22 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    return Row(
+Widget _buildHeader(BuildContext context) {
+  final scheme = Theme.of(context).colorScheme;
+  final textTheme = Theme.of(context).textTheme;
+
+  return Padding(
+    padding: const EdgeInsets.only(
+      top: 12,   // 🔥 مسافة علوية إضافية
+      left: 8,
+      right: 8,
+    ),
+    child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         IconButton(
+          iconSize: 26, // 🔥 تكبير السهم قليلاً
+          padding: const EdgeInsets.all(12), // 🔥 تكبير مساحة الضغط
           onPressed: () {
             Navigator.pushNamedAndRemoveUntil(
               context,
@@ -105,20 +114,32 @@ class LoginScreen extends StatelessWidget {
               (route) => false,
             );
           },
-          icon: Icon(Icons.arrow_back, color: scheme.onSurface),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, '/home');
-          },
-          child: Text(
-            'skip'.tr(),
-            style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
+          icon: Icon(
+            Icons.arrow_back,
+            color: scheme.onSurface,
           ),
         ),
+
+        TextButton(
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,  // 🔥 مساحة أفقية أكبر
+              vertical: 12,    // 🔥 مساحة عمودية أكبر
+            ),
+            textStyle: textTheme.bodyLarge?.copyWith( // 🔥 تكبير الخط
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurface,
+            ),
+          ),
+          onPressed: () {
+            Navigator.pushReplacementNamed(context, '/admin');
+          },
+          child: Text('skip'.tr()),
+        ),
       ],
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildLogo(Size size) {
   return Center(

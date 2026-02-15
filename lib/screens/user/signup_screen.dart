@@ -119,30 +119,55 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    return Row(
+Widget _buildHeader(BuildContext context) {
+  final scheme = Theme.of(context).colorScheme;
+  final textTheme = Theme.of(context).textTheme;
+
+  return Padding(
+    padding: const EdgeInsets.only(
+      top: 12,   // 🔥 مسافة علوية إضافية
+      left: 8,
+      right: 8,
+    ),
+    child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         IconButton(
-          icon: Icon(Icons.arrow_back, color: scheme.onSurface),
+          iconSize: 26, // 🔥 تكبير السهم قليلاً
+          padding: const EdgeInsets.all(12), // 🔥 تكبير مساحة الضغط
           onPressed: () {
-            Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/',
+              (route) => false,
+            );
           },
+          icon: Icon(
+            Icons.arrow_back,
+            color: scheme.onSurface,
+          ),
         ),
+
         TextButton(
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,  // 🔥 مساحة أفقية أكبر
+              vertical: 12,    // 🔥 مساحة عمودية أكبر
+            ),
+            textStyle: textTheme.bodyLarge?.copyWith( // 🔥 تكبير الخط
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurface,
+            ),
+          ),
           onPressed: () {
             Navigator.pushReplacementNamed(context, '/home');
           },
-          child: Text(
-            'skip'.tr(),
-            style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
-          ),
+          child: Text('skip'.tr()),
         ),
       ],
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildProfileImage(Size size) {
     final scheme = Theme.of(context).colorScheme;

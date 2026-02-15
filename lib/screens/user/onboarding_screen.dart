@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:url_launcher/url_launcher.dart'; // تأكد من أنك أضفت هذه المكتبة
+import 'package:url_launcher/url_launcher.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
@@ -13,98 +13,127 @@ class OnboardingScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: scheme.surface,
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            Align(
-              alignment: AlignmentDirectional.topEnd, // ✅ يتغير حسب اتجاه اللغة
-              child: Padding(
-                padding: const EdgeInsets.all(16.0), // بدل الـ top و right
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                  ),
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/home');
-                  },
-                  child: Text('skip'.tr()),
+
+            // ===== Header (Skip Button) =====
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: 12,      // 🔥 مسافة علوية إضافية
+                  left: 16,
+                  right: 16,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,  // 🔥 تكبير مساحة الضغط أفقياً
+                          vertical: 12,    // 🔥 تكبير مساحة الضغط عمودياً
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 16,    // 🔥 تكبير الخط
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.pushReplacementNamed(context, '/home');
+                      },
+                      child: Text('skip'.tr()),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            Center(
-              child: SingleChildScrollView(
-                child: Padding(
+
+            // ===== Body =====
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const SizedBox(height: 200),
+                      const SizedBox(height: 100),
+
                       Hero(
-                        tag: 'logo', // ✅ نفس التاج يستخدم في كل الشاشات
+                        tag: 'logo',
                         child: Image.asset(
                           'assets/images/logo.png',
                           width: 220,
                           height: 220,
                         ),
                       ),
+
                       const SizedBox(height: 30),
+
                       Text(
-                        'app_title'.tr(), // ✅ مفتاح الترجمة
+                        'app_title'.tr(),
                         style: textTheme.headlineMedium?.copyWith(
                           letterSpacing: 1.2,
                           color: scheme.onSurface,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+
                       const SizedBox(height: 40),
+
                       AnimatedButton(
-                        text: 'signup'.tr(), // ✅ مفتاح الترجمة
+                        text: 'signup'.tr(),
                         onPressed: () {
                           Navigator.pushNamed(context, '/signup');
                         },
                       ),
+
                       const SizedBox(height: 14),
+
                       AnimatedButton(
-                        text: 'login'.tr(), // ✅ مفتاح الترجمة
+                        text: 'login'.tr(),
                         onPressed: () {
                           Navigator.pushNamed(context, '/login');
                         },
                       ),
+
                       const SizedBox(height: 35),
+
                       Text(
-                        'continue_with'.tr(), // ✅ مفتاح الترجمة
+                        'continue_with'.tr(),
                         style: textTheme.bodyMedium?.copyWith(
                           color: scheme.onSurface.withOpacity(0.7),
                         ),
                       ),
+
                       const SizedBox(height: 18),
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
+                        children: const [
                           InteractiveSocialIcon(
                             icon: Icons.g_mobiledata,
                             color: Color(0xFFDB4437),
-                            url: 'https://www.google.com/', // رابط Google
+                            url: 'https://www.google.com/',
                           ),
                           SizedBox(width: 16),
                           InteractiveSocialIcon(
                             icon: Icons.travel_explore,
                             color: Color(0xFF1DA1F2),
-                            url: 'https://twitter.com/', // رابط Twitter
+                            url: 'https://twitter.com/',
                           ),
                           SizedBox(width: 16),
                           InteractiveSocialIcon(
                             icon: Icons.camera_alt,
                             color: Color(0xFFE4405F),
-                            url: 'https://www.instagram.com/', // رابط Instagram
+                            url: 'https://www.instagram.com/',
                           ),
                           SizedBox(width: 16),
                           InteractiveSocialIcon(
                             icon: Icons.facebook,
                             color: Color(0xFF1877F2),
-                            url: 'https://www.facebook.com/', // رابط Facebook
+                            url: 'https://www.facebook.com/',
                           ),
                         ],
                       ),
+
                       const SizedBox(height: 50),
                     ],
                   ),
@@ -118,12 +147,17 @@ class OnboardingScreen extends StatelessWidget {
   }
 }
 
-/// زر متحرك مع تأثير عند الضغط
+// ================= Animated Button =================
+
 class AnimatedButton extends StatefulWidget {
   final String text;
   final VoidCallback onPressed;
 
-  const AnimatedButton({required this.text, required this.onPressed, super.key});
+  const AnimatedButton({
+    required this.text,
+    required this.onPressed,
+    super.key,
+  });
 
   @override
   State<AnimatedButton> createState() => _AnimatedButtonState();
@@ -140,7 +174,6 @@ class _AnimatedButtonState extends State<AnimatedButton> {
       onTapDown: (_) => setState(() => _scale = 0.95),
       onTapUp: (_) => setState(() => _scale = 1.0),
       onTapCancel: () => setState(() => _scale = 1.0),
-      onTap: widget.onPressed,
       child: Transform.scale(
         scale: _scale,
         child: SizedBox(
@@ -153,14 +186,13 @@ class _AnimatedButtonState extends State<AnimatedButton> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),
-              shadowColor: scheme.shadow,
               elevation: 8,
             ),
             onPressed: widget.onPressed,
             child: Text(
               widget.text,
               style: const TextStyle(
-                fontSize: 16,        // ⬅️ هنا تحدد الحجم
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -171,16 +203,23 @@ class _AnimatedButtonState extends State<AnimatedButton> {
   }
 }
 
-/// أيقونات التواصل الاجتماعي مع تأثير عند الضغط
+// ================= Social Icons =================
+
 class InteractiveSocialIcon extends StatefulWidget {
   final IconData icon;
   final Color color;
-  final String url; // رابط الشبكة الاجتماعية
+  final String url;
 
-  const InteractiveSocialIcon({required this.icon, required this.color, required this.url, super.key});
+  const InteractiveSocialIcon({
+    required this.icon,
+    required this.color,
+    required this.url,
+    super.key,
+  });
 
   @override
-  State<InteractiveSocialIcon> createState() => _InteractiveSocialIconState();
+  State<InteractiveSocialIcon> createState() =>
+      _InteractiveSocialIconState();
 }
 
 class _InteractiveSocialIconState extends State<InteractiveSocialIcon> {
@@ -188,7 +227,7 @@ class _InteractiveSocialIconState extends State<InteractiveSocialIcon> {
 
   Future<void> _launchUrl(BuildContext context, String url) async {
     final Uri uri = Uri.parse(url);
-    final confirmed = await _showConfirmationDialog(context, url); // رسالة تأكيد قبل فتح الرابط
+    final confirmed = await _showConfirmationDialog(context, url);
 
     if (confirmed ?? false) {
       if (await canLaunchUrl(uri)) {
@@ -201,41 +240,26 @@ class _InteractiveSocialIconState extends State<InteractiveSocialIcon> {
     }
   }
 
-  // دالة لإظهار نافذة تأكيد قبل فتح الرابط
-  Future<bool?> _showConfirmationDialog(BuildContext context, String url) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black;
+  Future<bool?> _showConfirmationDialog(
+      BuildContext context, String url) {
     return showDialog<bool>(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('confirmation'.tr()),
-          content: Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: 'open_link_confirmation'.tr() + '\n', // النص المترجم
-              style: TextStyle(color: textColor),
-                ),
-                TextSpan(
-                  text: url, // الرابط الفعلي
-                  style: TextStyle(color: Colors.blue), // النص باللون الأزرق
-                ),
-              ],
-            ),
+      builder: (_) => AlertDialog(
+        title: Text('confirmation'.tr()),
+        content: Text(
+          '${'open_link_confirmation'.tr()}\n$url',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('cancel'.tr()),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text('cancel'.tr()),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text('ok'.tr()),
-            ),
-          ],
-        );
-      },
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('ok'.tr()),
+          ),
+        ],
+      ),
     );
   }
 
@@ -245,7 +269,7 @@ class _InteractiveSocialIconState extends State<InteractiveSocialIcon> {
       onTapDown: (_) => setState(() => _scale = 0.85),
       onTapUp: (_) => setState(() => _scale = 1.0),
       onTapCancel: () => setState(() => _scale = 1.0),
-      onTap: () => _launchUrl(context, widget.url),  // استخدام الرابط هنا
+      onTap: () => _launchUrl(context, widget.url),
       child: Transform.scale(
         scale: _scale,
         child: CircleAvatar(
