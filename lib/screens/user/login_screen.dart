@@ -1,14 +1,113 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import '../../services/api_service.dart';
+import '../../services/storage_service.dart';
+import '../../models/user.dart';
+import '../../widgets/widgets.dart';  // 🔥 أضف هذا السطر
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  // 🔹 Controllers
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  
+  // 🔹 State variables
+  bool _isLoading = false;
+  bool _obscurePassword = true;
+  
+  // 🔹 Service
+  final ApiService _apiService = ApiService();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  // 🔹 دالة تسجيل الدخول
+  Future<void> _login() async {
+    // التحقق من صحة المدخلات
+    if (_emailController.text.trim().isEmpty) {
+      showMessage(context, 'email_required'.tr(), type: MessageType.error);
+      return;
+    }
+    if (!_emailController.text.contains('@')) {
+      showMessage(context, 'invalid_email'.tr(), type: MessageType.error);
+      return;
+    }
+    if (_passwordController.text.isEmpty) {
+      showMessage(context, 'password_required'.tr(), type: MessageType.error);
+      return;
+    }
+    if (_passwordController.text.length < 6) {
+      showMessage(context, 'password_too_short'.tr(), type: MessageType.error);
+      return;
+    }
+    
+    setState(() => _isLoading = true);
+    
+    try {
+      // 🔹 إرسال طلب تسجيل الدخول
+      final response = await _apiService.post(
+        '/users/login',
+        {
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text,
+        },
+        requiresAuth: false,
+      );
+      
+      if (response['success'] == true) {
+        final data = response['data'];
+        
+        // 🔹 حفظ التوكن
+        await StorageService.saveToken(data['token']);
+        
+        // 🔹 حفظ بيانات المستخدم
+        await StorageService.saveUser(data['user']);
+        
+        // 🔹 تحويل البيانات إلى نموذج User
+        final user = User.fromJson(data['user']);
+        
+        if (!mounted) return;
+        
+        // 🔥 رسالة نجاح
+        showMessage(context, 'login_success'.tr(), type: MessageType.success);
+        
+        // 🔹 التوجيه حسب الصلاحية بعد تأخير بسيط
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            if (user.isAdmin) {
+              Navigator.pushReplacementNamed(context, '/admin');
+            } else {
+              Navigator.pushReplacementNamed(context, '/home');
+            }
+          }
+        });
+      } else {
+        showMessage(context, response['message'] ?? 'login_failed'.tr(), type: MessageType.error);
+      }
+    } catch (e) {
+      String errorMessage = e.toString().replaceAll('Exception: ', '');
+      showMessage(context, errorMessage, type: MessageType.error);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final padding = MediaQuery.of(context).padding;
-
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -23,13 +122,9 @@ class LoginScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildHeader(context),
-
                 SizedBox(height: size.height * 0.08),
-
-                _buildLogo(size), // ✅ Hero مع نفس التاج
-
+                _buildLogo(size),
                 const SizedBox(height: 25),
-
                 Text(
                   'app_title'.tr(),
                   textAlign: TextAlign.center,
@@ -39,35 +134,38 @@ class LoginScreen extends StatelessWidget {
                     letterSpacing: 1.2,
                   ),
                 ),
-
                 const Spacer(),
-
+                
+                // 🔹 حقل البريد الإلكتروني
                 _CustomTextField(
                   hint: 'email'.tr(),
                   keyboardType: TextInputType.emailAddress,
+                  controller: _emailController,
                 ),
-
                 const SizedBox(height: 25),
-
+                
+                // 🔹 حقل كلمة المرور
                 _CustomTextField(
                   hint: 'enter_password'.tr(),
                   isPassword: true,
+                  controller: _passwordController,
+                  onToggleObscure: () {
+                    setState(() => _obscurePassword = !_obscurePassword);
+                  },
+                  obscure: _obscurePassword,
                 ),
-
                 const SizedBox(height: 35),
-
-                // ✅ الزر مركزي وثابت الحجم
+                
+                // 🔹 زر تسجيل الدخول
                 Center(
-                  child: AnimatedButton(
-                    text: 'login'.tr(),
-                    onPressed: () {
-                      // هنا كود تسجيل الدخول
-                    },
-                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator()
+                      : AnimatedButton(
+                          text: 'login'.tr(),
+                          onPressed: _login,
+                        ),
                 ),
-
                 const SizedBox(height: 15),
-
                 Center(
                   child: TextButton(
                     onPressed: () {
@@ -81,7 +179,6 @@ class LoginScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
               ],
             ),
@@ -91,72 +188,60 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-Widget _buildHeader(BuildContext context) {
-  final scheme = Theme.of(context).colorScheme;
-  final textTheme = Theme.of(context).textTheme;
+  Widget _buildHeader(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
-  return Padding(
-    padding: const EdgeInsets.only(
-      top: 12,   // 🔥 مسافة علوية إضافية
-      left: 8,
-      right: 8,
-    ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        IconButton(
-          iconSize: 26, // 🔥 تكبير السهم قليلاً
-          padding: const EdgeInsets.all(12), // 🔥 تكبير مساحة الضغط
-          onPressed: () {
-            Navigator.pushNamedAndRemoveUntil(
-              context,
-              '/',
-              (route) => false,
-            );
-          },
-          icon: Icon(
-            Icons.arrow_back,
-            color: scheme.onSurface,
+    return Padding(
+      padding: const EdgeInsets.only(top: 12, left: 8, right: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            iconSize: 26,
+            padding: const EdgeInsets.all(12),
+            onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/',
+                (route) => false,
+              );
+            },
+            icon: Icon(Icons.arrow_back, color: scheme.onSurface),
           ),
-        ),
-
-        TextButton(
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,  // 🔥 مساحة أفقية أكبر
-              vertical: 12,    // 🔥 مساحة عمودية أكبر
+          TextButton(
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              textStyle: textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            textStyle: textTheme.bodyLarge?.copyWith( // 🔥 تكبير الخط
-              fontWeight: FontWeight.w600,
-              color: scheme.onSurface,
-            ),
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, '/home');
+            },
+            child: Text('skip'.tr()),
           ),
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, '/admin');
-          },
-          child: Text('skip'.tr()),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
   Widget _buildLogo(Size size) {
-  return Center(
-    child: Hero(
-      tag: 'logo',
-      child: Image.asset(
-        'assets/images/logo.png',
-        width: 220,  // ✅ حجم ثابت
-        height: 220, // ✅ حجم ثابت
-        fit: BoxFit.contain, // ✅ بدون تمدد
+    return Center(
+      child: Hero(
+        tag: 'logo',
+        child: Image.asset(
+          'assets/images/logo.png',
+          width: 220,
+          height: 220,
+          fit: BoxFit.contain,
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
-// ---------- زر متحرك مثل Onboarding ----------
+// ---------- زر متحرك ----------
 class AnimatedButton extends StatefulWidget {
   final String text;
   final VoidCallback onPressed;
@@ -171,60 +256,59 @@ class _AnimatedButtonState extends State<AnimatedButton> {
   double _scale = 1.0;
 
   @override
- Widget build(BuildContext context) {
-  final scheme = Theme.of(context).colorScheme;
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
 
-  return GestureDetector(
-    onTapDown: (_) => setState(() => _scale = 0.95),
-    onTapUp: (_) => setState(() => _scale = 1.0),
-    onTapCancel: () => setState(() => _scale = 1.0),
-    onTap: widget.onPressed,
-    child: Transform.scale(
-      scale: _scale,
-      child: SizedBox(
-        width: 250,  // ✅ نفس حجم زر Login
-        height: 50,  // ✅ نفس الارتفاع
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: scheme.primary,
-            foregroundColor: scheme.onPrimary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _scale = 0.95),
+      onTapUp: (_) => setState(() => _scale = 1.0),
+      onTapCancel: () => setState(() => _scale = 1.0),
+      onTap: widget.onPressed,
+      child: Transform.scale(
+        scale: _scale,
+        child: SizedBox(
+          width: 250,
+          height: 50,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: scheme.primary,
+              foregroundColor: scheme.onPrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              shadowColor: scheme.shadow,
+              elevation: 8,
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            shadowColor: scheme.shadow,
-            elevation: 8,
-            textStyle: const TextStyle(
-              fontSize: 16,      // ✅ حجم الخط
-              fontWeight: FontWeight.w600,
-            ),
+            onPressed: widget.onPressed,
+            child: Text(widget.text),
           ),
-          onPressed: widget.onPressed,
-          child: Text(widget.text),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 // ---------- TextField مخصص ----------
-class _CustomTextField extends StatefulWidget {
+class _CustomTextField extends StatelessWidget {
   final String hint;
   final bool isPassword;
   final TextInputType? keyboardType;
+  final TextEditingController? controller;
+  final bool obscure;
+  final VoidCallback? onToggleObscure;
 
   const _CustomTextField({
     required this.hint,
     this.isPassword = false,
     this.keyboardType,
+    this.controller,
+    this.obscure = true,
+    this.onToggleObscure,
   });
-
-  @override
-  State<_CustomTextField> createState() => _CustomTextFieldState();
-}
-
-class _CustomTextFieldState extends State<_CustomTextField> {
-  bool _obscure = true;
 
   @override
   Widget build(BuildContext context) {
@@ -232,11 +316,12 @@ class _CustomTextFieldState extends State<_CustomTextField> {
     final textTheme = Theme.of(context).textTheme;
 
     return TextField(
-      obscureText: widget.isPassword ? _obscure : false,
-      keyboardType: widget.keyboardType,
+      controller: controller,
+      obscureText: isPassword ? obscure : false,
+      keyboardType: keyboardType,
       style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
       decoration: InputDecoration(
-        hintText: widget.hint,
+        hintText: hint,
         hintStyle: textTheme.bodySmall?.copyWith(
           color: scheme.onSurface.withOpacity(0.6),
         ),
@@ -246,15 +331,13 @@ class _CustomTextFieldState extends State<_CustomTextField> {
         focusedBorder: UnderlineInputBorder(
           borderSide: BorderSide(color: scheme.primary),
         ),
-        suffixIcon: widget.isPassword
+        suffixIcon: isPassword
             ? IconButton(
                 icon: Icon(
-                  _obscure ? Icons.visibility_off : Icons.visibility,
+                  obscure ? Icons.visibility_off : Icons.visibility,
                   color: scheme.onSurface,
                 ),
-                onPressed: () {
-                  setState(() => _obscure = !_obscure);
-                },
+                onPressed: onToggleObscure,
               )
             : null,
       ),
