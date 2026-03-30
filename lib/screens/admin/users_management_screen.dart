@@ -69,10 +69,9 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
     }
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-  }
-
+String _formatDate(DateTime date) {
+  return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+}
   List<User> get filteredUsers {
     return _users.where((user) {
       final searchLower = searchQuery.toLowerCase();
@@ -90,52 +89,50 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
     }).toList();
   }
 
-  Future<void> _toggleUserStatus(User user) async {
-    final action = user.isActive ? 'disable' : 'enable';
-    final confirmed = await _confirmAction(
-      title: action == 'disable' ? 'disable_user' : 'enable_user',
-      message: action == 'disable'
-          ? 'disable_user_confirmation'.tr(args: [user.fullName])
-          : 'enable_user_confirmation'.tr(args: [user.fullName]),
-    );
+Future<void> _toggleUserStatus(User user) async {
+  final action = user.isActive ? 'disable' : 'enable';
+  final confirmed = await _confirmAction(
+    title: action == 'disable' ? 'disable_user'.tr() : 'enable_user'.tr(),
+    message: action == 'disable'
+        ? 'disable_user_confirmation'.tr().replaceAll('%s', user.fullName)
+        : 'enable_user_confirmation'.tr().replaceAll('%s', user.fullName),
+  );
 
-    if (confirmed) {
-      try {
-        await _userService.toggleUserStatus(user.id, !user.isActive);
-        await _fetchUsers();
+  if (confirmed) {
+    try {
+      await _userService.toggleUserStatus(user.id, !user.isActive);
+      await _fetchUsers();
 
-        showMessage(
-          context,
-          user.isActive ? 'user_disabled'.tr() : 'user_enabled'.tr(),
-          type: MessageType.success,
-        );
-      } catch (e) {
-        showMessage(
-          context,
-          e.toString().replaceAll('Exception: ', ''),
-          type: MessageType.error,
-        );
-      }
+      showMessage(
+        context,
+        user.isActive ? 'user_disabled'.tr() : 'user_enabled'.tr(),
+        type: MessageType.success,
+      );
+    } catch (e) {
+      showMessage(
+        context,
+        e.toString().replaceAll('Exception: ', ''),
+        type: MessageType.error,
+      );
     }
   }
-
+}
   Future<void> _deleteUser(User user) async {
-    final confirmed = await _confirmAction(
-      title: 'delete_user',
-      message: 'delete_user_confirmation'.tr(args: [user.fullName]),
-    );
+  final confirmed = await _confirmAction(
+    title: 'delete_user'.tr(),
+    message: 'delete_user_confirmation'.tr().replaceAll('%s', user.fullName),
+  );
 
-    if (confirmed) {
-      try {
-        await _userService.deleteUser(user.id);
-        await _fetchUsers();
-        showMessage(context, 'user_deleted'.tr(), type: MessageType.success);
-      } catch (e) {
-        showMessage(context, e.toString().replaceAll('Exception: ', ''), type: MessageType.error);
-      }
+  if (confirmed) {
+    try {
+      await _userService.deleteUser(user.id);
+      await _fetchUsers();
+      showMessage(context, 'user_deleted'.tr(), type: MessageType.success);
+    } catch (e) {
+      showMessage(context, e.toString().replaceAll('Exception: ', ''), type: MessageType.error);
     }
   }
-
+}
   Future<bool> _confirmAction({
     required String title,
     required String message,
@@ -174,24 +171,27 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
     return result ?? false;
   }
 
-  Future<void> _toggleUserRole(User user) async {
-    final newRole = user.isAdmin ? 'user' : 'admin';
-    final confirmed = await _confirmAction(
-      title: 'change_role',
-      message: 'change_role_confirmation'.tr(args: [user.fullName, newRole]),
-    );
+Future<void> _toggleUserRole(User user) async {
+  final newRole = user.isAdmin ? 'user' : 'admin';
+  final message = 'change_role_confirmation'.tr()
+      .replaceFirst('%s', user.fullName)
+      .replaceFirst('%s', newRole);
+  
+  final confirmed = await _confirmAction(
+    title: 'change_role'.tr(),
+    message: message,
+  );
 
-    if (confirmed) {
-      try {
-        await _userService.changeUserRole(user.id, newRole);
-        await _fetchUsers();
-        showMessage(context, 'role_updated'.tr(), type: MessageType.success);
-      } catch (e) {
-        showMessage(context, e.toString(), type: MessageType.error);
-      }
+  if (confirmed) {
+    try {
+      await _userService.changeUserRole(user.id, newRole);
+      await _fetchUsers();
+      showMessage(context, 'role_updated'.tr(), type: MessageType.success);
+    } catch (e) {
+      showMessage(context, e.toString(), type: MessageType.error);
     }
   }
-
+}
   Future<bool> _confirmLogout() async {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -439,12 +439,14 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                       Icon(Icons.calendar_today_outlined,
                           size: 12, color: scheme.onSurface.withOpacity(0.5)),
                       const SizedBox(width: 4),
-                      Text('joined'.tr(args: [_formatDate(user.createdAt)]),
-                          style: TextStyle(
-                              color: scheme.onSurface.withOpacity(0.5),
-                              fontSize: 11)),
+                      Text(
+                        'joined'.tr().replaceAll('%s', _formatDate(user.createdAt)),
+                        style: TextStyle(
+                            color: scheme.onSurface.withOpacity(0.5),
+                            fontSize: 11),
+                      ),
                     ],
-                  ),
+                  ),              
                 ],
               ),
             ),
