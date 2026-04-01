@@ -217,16 +217,52 @@
 "make_user": "تعيين مستخدم",
 "enable": "تفعيل",
 "disable_user": "تعطيل المستخدم",
-"disable_user_confirmation": "هل أنت متأكد أنك تريد تعطيل %s؟",
 "enable_user": "تفعيل المستخدم",
-"enable_user_confirmation": "هل أنت متأكد أنك تريد تفعيل %s؟",
 "change_role": "تغيير الدور",
-"change_role_confirmation": "هل أنت متأكد أنك تريد تغيير دور %s إلى %s؟",
 "role_updated": "تم تحديث الدور بنجاح",
 "user_enabled": "تم تفعيل المستخدم بنجاح",
 "user_disabled": "تم تعطيل المستخدم بنجاح",
 "delete_user": "حذف المستخدم",
-"delete_user_confirmation": "هل أنت متأكد أنك تريد حذف %s؟",
+"delete_user_confirmation": "هل أنت متأكد أنك تريد حذف المستخدم؟",
+"delete_store_confirmation": "هل أنت متأكد أنك تريد حذف المتجر",
 "user_deleted": "تم حذف المستخدم بنجاح",
-"joined": "تاريخ الانضمام: %s"
+"joined": "تاريخ الانضمام: %s",
+"category_name_ar": "اسم الفئة بالعربية",
+"category_name_en": "اسم الفئة بالإنجليزية",
+"category_name_ar_required": "الاسم بالعربية مطلوب",
+"category_name_en_required": "الاسم بالإنجليزية مطلوب",
+"icon_url_optional": "رابط الأيقونة (اختياري)",
+"add_category": "إضافة فئة",
+
+  "no_stores_found": "لا توجد متاجر",
+  "no_categories_found": "لا توجد تصنيفات",
+  "add_user": "إضافة مستخدم",
+  "edit_user": "تعديل مستخدم",
+  "create_user": "إنشاء مستخدم",
+  "update_user": "تحديث المستخدم",
+  "user_updated": "تم تحديث المستخدم بنجاح",
+
+  "personal_info": "المعلومات الشخصية",
+  "full_name": "الاسم الكامل",
+
+  "role_info": "معلومات الدور",
+  "role": "الدور",
+  "user": "مستخدم",
+
+  "confirm": "تأكيد",
+  "save": "حفظ",
+
+  "edit_category": "تعديل التصنيف",
+  "delete_category": "حذف التصنيف",
+  "delete_category_confirmation": "هل أنت متأكد من حذف التصنيف؟",
+  "category_updated": "تم تحديث التصنيف",
+
+  "icon_url": "رابط الأيقونة",
+
+  "edit_store": "تعديل المتجر",
+  "update_store": "تحديث المتجر",
+  "delete_store": "حذف المتجر",
+  "store_status": "حالة المتجر",
+  "image_url": "رابط الصورة",
+  "all_stores":"جميع المتاجر"
 }

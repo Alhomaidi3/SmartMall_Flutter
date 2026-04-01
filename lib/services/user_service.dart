@@ -1,5 +1,6 @@
 import '../services/api_service.dart';
 import '../models/user.dart';
+import 'dart:convert';
 
 class UserService {
   final ApiService _apiService = ApiService();
@@ -101,25 +102,28 @@ class UserService {
     }
   }
 
-  Future<User> changeUserRole(int id, String role) async {
-    try {
-      await _apiService.patch(
-        '/Users/$id/change-role',
-        role,
-        requiresAuth: true,
-      );
+Future<User> changeUserRole(int id, String role) async {
+  try {
+    final roleToSend = role.toLowerCase(); 
+    
+    await _apiService.patch(
+      '/Users/$id/change-role',
+      roleToSend,
+      requiresAuth: true,
+    );
 
-      final updatedUser = await getUserById(id);
-      if (updatedUser == null) {
-        throw Exception('User not found after role update');
-      }
-      return updatedUser;
-    } catch (e) {
-      throw Exception('Failed to change user role: $e');
+
+    final updatedUser = await getUserById(id);
+    if (updatedUser == null) {
+      throw Exception('User not found after role update');
     }
+    return updatedUser;
+  } catch (e) {
+    throw Exception('Failed to change user role: $e');
   }
+}
 
-  Future<List<dynamic>> getFavorites() async {
+Future<List<dynamic>> getFavorites() async {
     try {
       final response = await _apiService.get('/Users/favorites', requiresAuth: true);
       

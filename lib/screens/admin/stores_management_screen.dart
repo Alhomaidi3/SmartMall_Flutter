@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '/widgets/widgets.dart';
-import '/data/data.dart';
-import 'store_edit_screen.dart';
+import '/services/store_service.dart';
+import '/services/category_service.dart';
+import '/models/store.dart';
+import '/models/category.dart';
+import 'store_form_screen.dart';
 
 class StoresManagementScreen extends StatefulWidget {
   const StoresManagementScreen({super.key});
@@ -14,323 +17,192 @@ class StoresManagementScreen extends StatefulWidget {
 class _StoresManagementScreenState extends State<StoresManagementScreen> {
   String searchQuery = '';
   String selectedCategory = 'all';
+  String selectedStatus = 'all';
   final TextEditingController searchController = TextEditingController();
+  
+  List<StoreDto> _stores = [];
+  List<Category> _categories = [];
+  bool _isLoading = true;
+  int _currentPage = 1;
+  bool _hasMore = true;
+  bool _isSearching = false;
+  
+  final StoreService _storeService = StoreService();
+  final CategoryService _categoryService = CategoryService();
+  final List<FilterChipData> statusFilters = [
+    const FilterChipData(value: 'all', labelKey: 'all_stores', icon: Icons.store_outlined),
+    const FilterChipData(value: 'active', labelKey: 'active', icon: Icons.check_circle_outline, selectedColor: Colors.green),
+    const FilterChipData(value: 'inactive', labelKey: 'inactive', icon: Icons.remove_circle_outline, selectedColor: Colors.red),
+  ];
 
-  List<StoreData> get filteredStores {
-    return storesData.where((store) {
-      final matchesSearch = store.nameEn.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          store.nameAr.contains(searchQuery) ||
-          store.category.toLowerCase().contains(searchQuery.toLowerCase());
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
+  }
+  
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadData() async {
+    await Future.wait([
+      _fetchCategories(),
+      _fetchStores(),
+    ]);
+  }
+
+  Future<void> _fetchCategories() async {
+    try {
+      final categories = await _categoryService.getAllCategoriesForAdmin(
+        language: context.locale.languageCode,
+      );
+      if (mounted) {
+        setState(() {
+          _categories = categories;
+        });
+      }
+    } catch (e) {
+      print('Error loading categories: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _fetchStores({bool refresh = false}) async {
+    if (!_hasMore && !refresh) return;
+    if (refresh) {
+      _currentPage = 1;
+      _hasMore = true;
+      if (mounted) setState(() => _isLoading = true);
+    } else if (_currentPage == 1) {
+      if (mounted) setState(() => _isLoading = true);
+    }
+    
+    try {
+      final response = await _storeService.getAllStoresForAdmin(
+        page: _currentPage,
+        pageSize: 20,
+        category: selectedCategory == 'all' ? null : selectedCategory,
+        language: context.locale.languageCode,
+      );
       
-      final matchesCategory = selectedCategory == 'all' || store.category == selectedCategory;
+      if (!mounted) return;
       
-      return matchesSearch && matchesCategory;
+      setState(() {
+        if (refresh || _currentPage == 1) {
+          _stores = response.data;
+        } else {
+          _stores.addAll(response.data);
+        }
+        _hasMore = response.hasNext;
+        _isLoading = false;
+      });
+      
+      if (response.hasNext) {
+        _currentPage++;
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _searchStores(String query) async {
+    if (query.isEmpty) {
+      _isSearching = false;
+      _currentPage = 1;
+      _hasMore = true;
+      await _fetchStores(refresh: true);
+      return;
+    }
+    
+    if (query.length < 2) return;
+    
+    setState(() {
+      _isSearching = true;
+      _isLoading = true;
+    });
+    
+    try {
+      final results = await _storeService.searchStores(
+        query,
+        language: context.locale.languageCode,
+      );
+      
+      if (mounted) {
+        setState(() {
+          _stores = results;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  List<StoreDto> get filteredStores {
+    return _stores.where((store) {
+      if (selectedStatus == 'active' && !store.isActive) {
+        return false;
+      }
+      if (selectedStatus == 'inactive' && store.isActive) {
+        return false;
+      }
+      return true;
     }).toList();
   }
 
-  List<String> get categories {
-    return ['all', ...storesData.map((s) => s.category).toSet()];
+  List<FilterChipData> get categoryFilters {
+    final filters = [
+      const FilterChipData(
+        value: 'all',
+        labelKey: 'all_categories',
+        icon: Icons.category_outlined,
+      ),
+      ..._categories.map((c) => FilterChipData(
+        value: c.getName(context.locale.languageCode),
+        dynamicLabel: c.getName(context.locale.languageCode),
+        icon: Icons.category,
+        selectedColor: Theme.of(context).colorScheme.primary,
+      )),
+    ];
+    return filters;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      backgroundColor: scheme.surface,
-            appBar: CustomAppBar(
-        title: 'stores_management'.tr(),
-        showProfileIcon: true,
-        profileTabIndex: 3,
-        leadingWidget: Container(
-          margin: const EdgeInsets.only(left: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            color: Theme.of(context).colorScheme.primary,
-            onPressed: () {
-              // TODO: فتح صفحة الإشعارات
-            },
-          ),
-        ),
-      ),
-      body: Column(
-        children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: CustomSearchBar(
-              controller: searchController,
-              onChanged: (value) => setState(() => searchQuery = value),
-              hintText: 'search_stores'.tr(),
-            ),
-          ),
-
-          // Category Filter Chips
-          SizedBox(
-            height: 50,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final category = categories[index];
-                final isSelected = selectedCategory == category;
-                
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(
-                      category == 'all' ? 'all_categories'.tr() : '${category}_title'.tr(),
-                    ),
-                    selected: isSelected,
-                    onSelected: (_) {
-                      setState(() => selectedCategory = category);
-                    },
-                    backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
-                    selectedColor: scheme.primary.withOpacity(0.2),
-                    labelStyle: TextStyle(
-                      color: isSelected ? scheme.primary : scheme.onSurface,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    checkmarkColor: scheme.primary,
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // Stats Row
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Text(
-                  'total_stores'.tr(),
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurface.withOpacity(0.7),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: scheme.primary,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${filteredStores.length}',
-                    style: TextStyle(
-                      color: scheme.onPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const StoreEditScreen(),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.add),
-                  label: Text('add_store'.tr()),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: scheme.primary,
-                    foregroundColor: scheme.onPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // Stores List
-          Expanded(
-            child: filteredStores.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.block,
-                          size: 80,
-                          color: scheme.onSurface.withOpacity(0.3),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'no_stores_found'.tr(),
-                          style: textTheme.bodyLarge?.copyWith(
-                            color: scheme.onSurface.withOpacity(0.7),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: filteredStores.length,
-                    itemBuilder: (context, index) {
-                      final store = filteredStores[index];
-                      return _buildStoreCard(context, store);
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStoreCard(BuildContext context, StoreData store) {
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final locale = context.locale.languageCode;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[850] : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => StoreEditScreen(store: store),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // Store Image
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  store.image,
-                  width: 70,
-                  height: 70,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    width: 70,
-                    height: 70,
-                    color: Colors.grey[300],
-                    child: Icon(Icons.store, color: Colors.grey[600]),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              
-              // Store Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      locale == 'ar' ? store.nameAr : store.nameEn,
-                      style: TextStyle(
-                        color: scheme.onSurface,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${store.category}_title'.tr(),
-                      style: TextStyle(
-                        color: scheme.onSurface.withOpacity(0.7),
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(Icons.star, color: Colors.amber, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${store.rating}',
-                          style: TextStyle(
-                            color: scheme.onSurface,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '(${store.ratingCount})',
-                          style: TextStyle(
-                            color: scheme.onSurface.withOpacity(0.5),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              
-              // Actions
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.edit_outlined, color: scheme.primary),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => StoreEditScreen(store: store),
-                        ),
-                      );
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () => _showDeleteDialog(context, store),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showDeleteDialog(BuildContext context, StoreData store) async {
-    final scheme = Theme.of(context).colorScheme;
-    final locale = context.locale.languageCode;
-
+  Future<void> _deleteStore(StoreDto store) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('delete_store'.tr()),
         content: Text(
           'delete_store_confirmation'.tr(
-            args: [locale == 'ar' ? store.nameAr : store.nameEn],
+            args: [store.getName(context.locale.languageCode)],
           ),
         ),
         shape: RoundedRectangleBorder(
@@ -339,10 +211,7 @@ class _StoresManagementScreenState extends State<StoresManagementScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'cancel'.tr(),
-              style: TextStyle(color: scheme.onSurface.withOpacity(0.7)),
-            ),
+            child: Text('cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -360,13 +229,234 @@ class _StoresManagementScreenState extends State<StoresManagementScreen> {
     );
 
     if (confirmed ?? false) {
-      // Here you would delete the store
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('store_deleted'.tr()),
-          backgroundColor: Colors.green,
-        ),
-      );
+      setState(() => _isLoading = true);
+      
+      try {
+        await _storeService.deleteStore(store.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('store_deleted'.tr()),
+              backgroundColor: Colors.green,
+            ),
+          );
+          await _fetchStores(refresh: true);
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceAll('Exception: ', '')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final locale = context.locale.languageCode;
+
+    return Scaffold(
+      backgroundColor: scheme.surface,
+      appBar: CustomAppBar(
+        title: 'stores_management'.tr(),
+        showProfileIcon: true,
+        profileTabIndex: 3,
+        leadingWidget: Container(
+          margin: const EdgeInsets.only(left: 8),
+          decoration: BoxDecoration(
+            color: scheme.primary.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            color: scheme.primary,
+            onPressed: () {
+              // TODO: فتح صفحة الإشعارات
+            },
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: CustomSearchBar(
+              controller: searchController,
+              onChanged: (value) {
+                setState(() => searchQuery = value);
+                _searchStores(value);
+              },
+              hintText: 'search_stores'.tr(),
+            ),
+          ),
+          
+          // Stats Row with Add Button
+          UnifiedStatsRow(
+            icon: Icons.store,
+            title: 'total_stores'.tr(),
+            count: filteredStores.length,
+            onAddPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const StoreFormScreen(),
+                ),
+              );
+              if (result == true) {
+                _fetchStores(refresh: true);
+              }
+            },
+            addButtonText: 'add_store'.tr(),
+          ),
+          // Scrollable Content
+Expanded(
+    child: Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8), 
+  child: ClipRRect(
+    borderRadius: BorderRadius.circular(20), 
+    child: Container(
+    color: Theme.of(context).colorScheme.surfaceContainerHighest, 
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Status Filter Chips
+            if (statusFilters.isNotEmpty)
+              FilterChipsRow(
+                filters: statusFilters,
+                selectedStatus: selectedStatus,
+                onSingleSelected: (value) {
+                  setState(() {
+                    selectedStatus = value;
+                    if (value == 'all') selectedCategory = 'all';
+                    _fetchStores(refresh: true);
+                  });
+                },
+              ),
+            // Category Filter Chips
+            if (categoryFilters.isNotEmpty)
+              FilterChipsRow(
+                filters: categoryFilters,
+                selectedStatus: selectedCategory,
+                onSingleSelected: (value) {
+                  setState(() {
+                    selectedCategory = value;
+                    if (value == 'all') selectedStatus = 'all';
+                    _currentPage = 1;
+                    _hasMore = true;
+                    _fetchStores(refresh: true);
+                  });
+                },
+              ),
+
+            // Stores List
+            UnifiedLoadingState(
+              isLoading: _isLoading && _stores.isEmpty,
+              isEmpty: filteredStores.isEmpty,
+              emptyIcon: 'store',
+              emptyTitle: 'no_stores_found'.tr(),
+              emptySubtitle: 'try_adjusting_search'.tr(),
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (scrollInfo) {
+                  if (!_isLoading && _hasMore && !_isSearching &&
+                      scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
+                    _fetchStores();
+                  }
+                  return false;
+                },
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filteredStores.length + (_hasMore && !_isSearching ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == filteredStores.length) {
+                      return const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    final store = filteredStores[index];
+                    return _buildStoreCard(context, store);
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  ),
+)  )      ],
+      ),
+    );
+  }
+
+  Widget _buildStoreCard(BuildContext context, StoreDto store) {
+    final locale = context.locale.languageCode;
+    
+    // بناء معلومات إضافية للبطاقة
+    final additionalInfo = [
+      Row(
+        children: [
+          Icon(Icons.layers, size: 14, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 4),
+          Text(
+            '${'floor'.tr()}: ${store.floor}',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Icon(Icons.star, color: Colors.amber, size: 14),
+          const SizedBox(width: 4),
+          Text(
+            store.averageRating.toStringAsFixed(1),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '(${store.ratingsCount})',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    ];
+
+    return UnifiedCard(
+      type: CardType.store,
+      data: store,
+      title: store.getName(locale),
+      subtitle: store.getCategoryName(locale) ?? 'no_category'.tr(),
+      isActive: store.isActive,
+      onEdit: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => StoreFormScreen(store: store),
+          ),
+        );
+        if (result == true) {
+          _fetchStores(refresh: true);
+        }
+      },
+      onDelete: () => _deleteStore(store),
+      additionalInfo: additionalInfo,
+    );
   }
 }

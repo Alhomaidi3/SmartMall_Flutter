@@ -6,7 +6,6 @@ import 'screens/user/signup_screen.dart';
 import 'screens/user/onboarding_screen.dart';
 import 'widgets/user_bottom_navigation_bar.dart';              // ✅ تصحيح المسار
 import 'widgets/admin_bottom_navigation_bar.dart';
-import 'screens/admin/store_edit_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -125,21 +124,16 @@ class _MyAppState extends State<MyApp> {
               ),
             );
           
-          // ✅ بروفايل المستخدم العادي
-          
-          // ✅ Routes الأدمن
-case '/admin':
-  return MaterialPageRoute(
-    builder: (_) => AdminMainScreen(
-      onThemeChanged: _toggleTheme,  // ✅ تمرر الدالة
-    ),
-  );
-          
-          case '/admin/stores/add':
-            return MaterialPageRoute(builder: (_) => const StoreEditScreen());
+          case '/admin':
+            return MaterialPageRoute(
+              builder: (_) => AdminMainScreen(
+                onThemeChanged: _toggleTheme,  // ✅ تمرر الدالة
+              ),
+            );
           
           default:
             return MaterialPageRoute(builder: (_) => const OnboardingScreen());
+            
         }
       },
     );

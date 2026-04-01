@@ -127,27 +127,29 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> patch(
-    String endpoint,
-    dynamic data, {
-    bool requiresAuth = true,
-    String language = 'ar',
-  }) async {
-    try {
-      var url = "${ApiEndpoints.baseUrl}$endpoint";
-      url = _addLanguage(url, 'language=$language');
+Future<Map<String, dynamic>> patch(
+  String endpoint,
+  dynamic data, {
+  bool requiresAuth = true,
+  String language = 'ar',
+}) async {
+  try {
+    var url = "${ApiEndpoints.baseUrl}$endpoint";
+    url = _addLanguage(url, 'language=$language');
 
-      final response = await http.patch(
-        Uri.parse(url),
-        headers: await _getHeaders(requiresAuth: requiresAuth),
-        body: data is String ? data : jsonEncode(data),
-      );
+    final bodyToSend = jsonEncode(data); 
 
-      return _handleResponse(response);
-    } catch (e) {
-      throw ApiException(message: "Network error: $e", statusCode: 0);
-    }
+    final response = await http.patch(
+      Uri.parse(url),
+      headers: await _getHeaders(requiresAuth: requiresAuth),
+      body: bodyToSend,
+    );
+
+    return _handleResponse(response);
+  } catch (e) {
+    throw ApiException(message: "Network error: $e", statusCode: 0);
   }
+}
 
   Map<String, dynamic> _handleResponse(http.Response response) {
     final Map<String, dynamic> data = jsonDecode(response.body);
