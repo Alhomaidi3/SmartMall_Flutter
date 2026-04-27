@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import '/widgets/widgets.dart';
 import '../../services/category_service.dart';
 import '../../models/category.dart';
+import 'category_form_screen.dart';
 
 class CategoriesManagementScreen extends StatefulWidget {
   const CategoriesManagementScreen({super.key});
@@ -113,221 +114,25 @@ class _CategoriesManagementScreenState extends State<CategoriesManagementScreen>
       return true;
     }).toList();
   }
-
-  Future<void> _showAddCategoryDialog() async {
-    final nameArController = TextEditingController();
-    final nameEnController = TextEditingController();
-    final iconUrlController = TextEditingController();
-    bool isActive = true;
-    
-    await showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: Text('add_category'.tr()),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  UnifiedTextField(
-                    controller: nameArController,
-                    label: 'category_name_ar'.tr(),
-                    icon: Icons.text_fields,
-                    isRequired: true,
-                  ),
-                  const SizedBox(height: 12),
-                  UnifiedTextField(
-                    controller: nameEnController,
-                    label: 'category_name_en'.tr(),
-                    icon: Icons.text_fields,
-                    isRequired: true,
-                  ),
-                  const SizedBox(height: 12),
-                  UnifiedTextField(
-                    controller: iconUrlController,
-                    label: 'icon_url'.tr(),
-                    icon: Icons.link,
-                    hintText: 'https://example.com/icon.png',
-                  ),
-                  const SizedBox(height: 12),
-                  SwitchListTile(
-                    title: Text('active'.tr()),
-                    value: isActive,
-                    onChanged: (value) {
-                      setDialogState(() => isActive = value);
-                    },
-                  ),
-                ],
-              ),
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('cancel'.tr()),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  final nameAr = nameArController.text.trim();
-                  final nameEn = nameEnController.text.trim();
-                  
-                  if (nameAr.isEmpty) {
-                    if (!mounted) return;
-                    showMessage(context, 'category_name_ar_required'.tr(), type: MessageType.error);
-                    return;
-                  }
-                  
-                  if (nameEn.isEmpty) {
-                    if (!mounted) return;
-                    showMessage(context, 'category_name_en_required'.tr(), type: MessageType.error);
-                    return;
-                  }
-                  
-                  Navigator.pop(context);
-                  
-                  if (!mounted) return;
-                  setState(() => _isLoading = true);
-                  
-                  try {
-                    await _categoryService.createCategory(
-                      CategoryCreateDto(
-                        nameAr: nameAr,
-                        nameEn: nameEn,
-                        iconUrl: iconUrlController.text.trim().isEmpty 
-                            ? null 
-                            : iconUrlController.text.trim(),
-                      ),
-                    );
-                    
-                    if (!mounted) return;
-                    showMessage(context, 'category_added'.tr(), type: MessageType.success);
-                    await _fetchCategories();
-                  } catch (e) {
-                    if (!mounted) return;
-                    showMessage(context, e.toString().replaceAll('Exception: ', ''), type: MessageType.error);
-                    if (mounted) {
-                      setState(() => _isLoading = false);
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                child: Text('save'.tr()),
-              ),
-            ],
-          );
-        },
-      ),
-    );
+Future<void> _addCategory() async {
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => const CategoryFormScreen()),
+  );
+  if (result == true) {
+    await _fetchCategories();
   }
+}
 
-  Future<void> _editCategory(Category category) async {
-    final nameArController = TextEditingController(text: category.nameAr);
-    final nameEnController = TextEditingController(text: category.nameEn);
-    final iconUrlController = TextEditingController(text: category.iconUrl ?? '');
-    bool isActive = category.isActive;
-    
-    await showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: Text('edit_category'.tr()),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  UnifiedTextField(
-                    controller: nameArController,
-                    label: 'category_name_ar'.tr(),
-                    icon: Icons.text_fields,
-                    isRequired: true,
-                  ),
-                  const SizedBox(height: 12),
-                  UnifiedTextField(
-                    controller: nameEnController,
-                    label: 'category_name_en'.tr(),
-                    icon: Icons.text_fields,
-                    isRequired: true,
-                  ),
-                  const SizedBox(height: 12),
-                  UnifiedTextField(
-                    controller: iconUrlController,
-                    label: 'icon_url'.tr(),
-                    icon: Icons.link,
-                    hintText: 'https://example.com/icon.png',
-                  ),
-                  const SizedBox(height: 12),
-                  SwitchListTile(
-                    title: Text('active'.tr()),
-                    value: isActive,
-                    onChanged: (value) {
-                      setDialogState(() => isActive = value);
-                    },
-                  ),
-                ],
-              ),
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('cancel'.tr()),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  
-                  if (!mounted) return;
-                  setState(() => _isLoading = true);
-                  
-                  try {
-                    await _categoryService.updateCategory(
-                      category.id,
-                      CategoryUpdateDto(
-                        nameAr: nameArController.text.trim().isEmpty ? null : nameArController.text.trim(),
-                        nameEn: nameEnController.text.trim().isEmpty ? null : nameEnController.text.trim(),
-                        iconUrl: iconUrlController.text.trim().isEmpty ? null : iconUrlController.text.trim(),
-                        isActive: isActive,
-                      ),
-                    );
-                    
-                    if (!mounted) return;
-                    showMessage(context, 'category_updated'.tr(), type: MessageType.success);
-                    await _fetchCategories();
-                  } catch (e) {
-                    if (!mounted) return;
-                    showMessage(context, e.toString().replaceAll('Exception: ', ''), type: MessageType.error);
-                    if (mounted) {
-                      setState(() => _isLoading = false);
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                child: Text('save'.tr()),
-              ),
-            ],
-          );
-        },
-      ),
-    );
+Future<void> _editCategory(Category category) async {
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => CategoryFormScreen(category: category)),
+  );
+  if (result == true) {
+    await _fetchCategories();
   }
+}
 
   Future<void> _deleteCategory(Category category) async {
     final confirmed = await showDialog<bool>(
@@ -442,7 +247,7 @@ class _CategoriesManagementScreenState extends State<CategoriesManagementScreen>
             icon: Icons.category,
             title: 'total_categories'.tr(),
             count: filteredCategories.length,
-            onAddPressed: _showAddCategoryDialog,
+            onAddPressed: _addCategory,
             addButtonText: 'add_category'.tr(),
           ),
 

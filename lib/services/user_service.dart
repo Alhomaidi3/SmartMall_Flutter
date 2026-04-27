@@ -5,6 +5,8 @@ import 'dart:convert';
 class UserService {
   final ApiService _apiService = ApiService();
 
+  // ==================== جلب المستخدمين (Admin) ====================
+
   Future<List<User>> getUsers() async {
     try {
       final response = await _apiService.get('/Users', requiresAuth: true);
@@ -56,6 +58,39 @@ class UserService {
     }
   }
 
+  // ==================== الملف الشخصي (Profile) ====================
+
+  /// جلب المستخدم الحالي
+  Future<User> getCurrentUser() async {
+    try {
+      final response = await _apiService.get('/Users/profile', requiresAuth: true);
+      
+      if (response['success'] == true) {
+        return User.fromJson(response['data']);
+      } else {
+        throw Exception(response['message'] ?? 'Failed to load profile');
+      }
+    } catch (e) {
+      throw Exception('Failed to load profile: $e');
+    }
+  }
+
+  /// تحديث الملف الشخصي للمستخدم الحالي
+  Future<User> updateProfile(Map<String, dynamic> data) async {
+    try {
+      final response = await _apiService.put('/Users/profile', data, requiresAuth: true);
+      
+      if (response['success'] == true) {
+        return User.fromJson(response['data']);
+      } else {
+        throw Exception(response['message'] ?? 'Failed to update profile');
+      }
+    } catch (e) {
+      throw Exception('Failed to update profile: $e');
+    }
+  }
+
+  /// تحديث مستخدم بواسطة Admin
   Future<User> updateUser(int id, Map<String, dynamic> data) async {
     try {
       final response = await _apiService.put('/Users/$id', data, requiresAuth: true);
@@ -69,6 +104,45 @@ class UserService {
       throw Exception('Failed to update user: $e');
     }
   }
+
+  /// تغيير كلمة المرور
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      final response = await _apiService.put(
+        '/Users/password',
+        {
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+          'confirmPassword': confirmPassword,
+        },
+        requiresAuth: true,
+      );
+      
+      if (response['success'] != true) {
+        throw Exception(response['message'] ?? 'Failed to change password');
+      }
+    } catch (e) {
+      throw Exception('Failed to change password: $e');
+    }
+  }
+
+  // ==================== تسجيل الخروج ====================
+
+  /// تسجيل الخروج
+  Future<void> logout() async {
+    try {
+      await _apiService.post('/Users/logout', {}, requiresAuth: true);
+    } catch (e) {
+      // تجاهل الخطأ أثناء تسجيل الخروج
+      print('Logout error (ignored): $e');
+    }
+  }
+
+  // ==================== إدارة المستخدمين (Admin) ====================
 
   Future<void> deleteUser(int id) async {
     try {
@@ -102,28 +176,29 @@ class UserService {
     }
   }
 
-Future<User> changeUserRole(int id, String role) async {
-  try {
-    final roleToSend = role.toLowerCase(); 
-    
-    await _apiService.patch(
-      '/Users/$id/change-role',
-      roleToSend,
-      requiresAuth: true,
-    );
+  Future<User> changeUserRole(int id, String role) async {
+    try {
+      final roleToSend = role.toLowerCase(); 
+      
+      await _apiService.patch(
+        '/Users/$id/change-role',
+        roleToSend,
+        requiresAuth: true,
+      );
 
-
-    final updatedUser = await getUserById(id);
-    if (updatedUser == null) {
-      throw Exception('User not found after role update');
+      final updatedUser = await getUserById(id);
+      if (updatedUser == null) {
+        throw Exception('User not found after role update');
+      }
+      return updatedUser;
+    } catch (e) {
+      throw Exception('Failed to change user role: $e');
     }
-    return updatedUser;
-  } catch (e) {
-    throw Exception('Failed to change user role: $e');
   }
-}
 
-Future<List<dynamic>> getFavorites() async {
+  // ==================== المفضلات والتقييمات والإحصائيات ====================
+
+  Future<List<dynamic>> getFavorites() async {
     try {
       final response = await _apiService.get('/Users/favorites', requiresAuth: true);
       

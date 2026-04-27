@@ -20,7 +20,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   late TextEditingController _genderController;
-  
+  DateTime? _selectedDate;  
   String? _selectedRole;
   bool _isActive = true;
   bool _isEditing = false;
@@ -30,6 +30,10 @@ class _UserFormScreenState extends State<UserFormScreen> {
   
   final List<String> _roles = ['user', 'admin'];
   final List<String> _genders = ['male', 'female'];
+  
+  // ✅ متغيرات للتحكم في صلاحيات الإدمن
+  bool _isCurrentUserAdmin = false;
+  bool _isLoadingCurrentUser = true;
 
   @override
   void initState() {
@@ -40,9 +44,29 @@ class _UserFormScreenState extends State<UserFormScreen> {
     _emailController = TextEditingController(text: widget.user?.email ?? '');
     _phoneController = TextEditingController(text: widget.user?.phone ?? '');
     _genderController = TextEditingController(text: widget.user?.gender ?? '');
-    
+     _selectedDate = widget.user?.dateOfBirth;
     _selectedRole = widget.user?.role.toLowerCase() ?? 'user';
     _isActive = widget.user?.isActive ?? true;
+    
+    // ✅ تحقق من صلاحيات المستخدم الحالي
+    _checkIfCurrentUserIsAdmin();
+  }
+  
+  /// التحقق إذا كان المستخدم الحالي أدمن
+  Future<void> _checkIfCurrentUserIsAdmin() async {
+    setState(() => _isLoadingCurrentUser = true);
+    try {
+      final currentUser = await _userService.getCurrentUser();
+      setState(() {
+        _isCurrentUserAdmin = currentUser.role.toLowerCase() == 'admin';
+        _isLoadingCurrentUser = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isCurrentUserAdmin = false;
+        _isLoadingCurrentUser = false;
+      });
+    }
   }
 
   @override
@@ -61,28 +85,32 @@ Future<void> _saveUser() async {
 
   try {
     if (_isEditing) {
-      // بيانات عامة
+      // ✅ بيانات عامة (مسموح للجميع)
       final updateData = {
         'fullName': _fullNameController.text.trim(),
-        'email': _emailController.text.trim(),
         'phone': _phoneController.text.trim(),
         'gender': _genderController.text.trim(),
+        'dateOfBirth': _selectedDate?.toIso8601String(), 
       };
       
-      // تحديث البيانات العامة
-      await _userService.updateUser(widget.user!.id, updateData);
-
-      // تحديث الحالة فقط إذا تغيرت
-      if (_isActive != widget.user!.isActive) {
-        await _userService.toggleUserStatus(widget.user!.id, _isActive);
-      }
-
-      // تغيير الدور إذا تغير
-      if (_selectedRole != widget.user!.role.toLowerCase()) {
-        await _userService.changeUserRole(
-          widget.user!.id,
-          _selectedRole!.toLowerCase(),
-        );
+      // ✅ التمييز بين المستخدم العادي والأدمن
+      if (_isCurrentUserAdmin) {
+        // 🔹 الأدمن: يستخدم PUT /Users/{id}
+        await _userService.updateUser(widget.user!.id, updateData);
+        
+        // تحديث الحالة والدور (لأدمن فقط)
+        if (_isActive != widget.user!.isActive) {
+          await _userService.toggleUserStatus(widget.user!.id, _isActive);
+        }
+        if (_selectedRole != widget.user!.role.toLowerCase()) {
+          await _userService.changeUserRole(
+            widget.user!.id,
+            _selectedRole!.toLowerCase(),
+          );
+        }
+      } else {
+        // ✅ المستخدم العادي: يستخدم PUT /Users/profile
+        await _userService.updateProfile(updateData);
       }
 
       if (mounted) {
@@ -117,6 +145,17 @@ Future<void> _saveUser() async {
   }
 }
   Future<void> _deleteUser() async {
+    // ✅ فقط الإدمن يمكنه الحذف
+    if (!_isCurrentUserAdmin) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('only_admin_can_delete'.tr()),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     final confirmed = await _confirmAction(
       title: 'delete_user'.tr(),
       message: 'delete_user_confirmation'.tr(args: [_fullNameController.text]),
@@ -192,6 +231,19 @@ Future<void> _saveUser() async {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // ✅ إذا كان جاري تحميل صلاحيات المستخدم، أظهر مؤشر تحميل
+    if (_isLoadingCurrentUser) {
+      return Scaffold(
+        backgroundColor: scheme.surface,
+        appBar: CustomAppBar(
+          title: _isEditing ? 'edit_user'.tr() : 'add_user'.tr(),
+          showBackButton: true,
+          showProfileIcon: false,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
       backgroundColor: scheme.surface,
@@ -286,6 +338,7 @@ Future<void> _saveUser() async {
                       icon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
                       isRequired: true,
+                      readOnly: true,  
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'required_field'.tr();
@@ -329,45 +382,102 @@ Future<void> _saveUser() async {
                       icon: Icons.person_outline,
                       isRequired: true,
                     ),
+                                        const SizedBox(height: 16),
 
-                    const SizedBox(height: 24),
+InkWell(
+  onTap: () async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? widget.user?.dateOfBirth ?? DateTime.now(), // ✅ يظهر التاريخ الأصلي أولاً
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  },
+  child: Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    decoration: BoxDecoration(
+      border: Border.all(color: Colors.grey.shade300),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Row(
+      children: [
+        Icon(Icons.calendar_today, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            _selectedDate != null
+                ? DateFormat('yyyy-MM-dd').format(_selectedDate!)
+                : (widget.user?.dateOfBirth != null
+                    ? DateFormat('yyyy-MM-dd').format(widget.user!.dateOfBirth!)  // ✅ يعرض التاريخ الأصلي
+                    : 'date_of_birth'.tr()),
+            style: TextStyle(
+              color: (_selectedDate != null || widget.user?.dateOfBirth != null)
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Colors.grey,
+            ),
+          ),
+        ),
+        Icon(Icons.arrow_drop_down, color: Colors.grey),
+      ],
+    ),
+  ),
+),
 
-                    // Role Info
-                    SectionTitle(title: 'role_info'.tr()),
-                    const SizedBox(height: 16),
-                    
-                    // Role Dropdown
-                    UnifiedDropdown<String>(
-                      value: _selectedRole,
-                      items: _roles.map((role) {
-                        return DropdownMenuItem<String>(
-                          value: role,
-                          child: Row(
-                            children: [
-                              Icon(
-                                role == 'admin' 
-                                    ? Icons.admin_panel_settings 
-                                    : Icons.person_outline,
-                                size: 18,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(role.tr()),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedRole = value;
-                        });
-                      },
-                      label: 'role'.tr(),
-                      icon: _selectedRole == 'admin' 
-                          ? Icons.admin_panel_settings 
-                          : Icons.person_outline,
-                      isRequired: true,
-                    ),
+                    // ✅ قسم الإدمن - يظهر فقط إذا كان المستخدم الحالي أدمن
+                    if (_isCurrentUserAdmin) ...[
+                      const SizedBox(height: 24),
+
+                      SectionTitle(title: 'role_info'.tr()),
+                      const SizedBox(height: 16),
+                      
+                      // Role Dropdown
+                      UnifiedDropdown<String>(
+                        value: _selectedRole,
+                        items: _roles.map((role) {
+                          return DropdownMenuItem<String>(
+                            value: role,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  role == 'admin' 
+                                      ? Icons.admin_panel_settings 
+                                      : Icons.person_outline,
+                                  size: 18,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(role.tr()),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedRole = value;
+                          });
+                        },
+                        label: 'role'.tr(),
+                        icon: _selectedRole == 'admin' 
+                            ? Icons.admin_panel_settings 
+                            : Icons.person_outline,
+                        isRequired: true,
+                      ),
+                    ],
 
                     const SizedBox(height: 40),
 
@@ -378,11 +488,10 @@ Future<void> _saveUser() async {
                       icon: Icons.save,
                     ),
 
-                    if (_isEditing) ...[
+                    if (_isEditing && _isCurrentUserAdmin) ...[
                       const SizedBox(height: 16),
                                           
                       // Enable/Disable Button
-                    if (_isEditing)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         child: SizedBox(
@@ -391,18 +500,18 @@ Future<void> _saveUser() async {
                           child: ElevatedButton(
                             onPressed: () {
                               setState(() {
-                                _isActive = !_isActive; // تغيير الحالة محلياً فقط
+                                _isActive = !_isActive;
                               });
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: !(_isActive) ? Colors.green : Colors.red,
+                              backgroundColor: _isActive ? Colors.red : Colors.green,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30),
                               ),
                             ),
                             child: Text(
-                              !(_isActive) ? 'active'.tr() : 'inactive'.tr(),
+                              _isActive ? 'inactive'.tr() : 'active'.tr(),
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

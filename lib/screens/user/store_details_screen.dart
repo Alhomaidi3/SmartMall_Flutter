@@ -1,209 +1,435 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '/widgets/widgets.dart';
-import '/data/data.dart';
+import '/services/store_service.dart';
+import '/models/store.dart';
 
 class StoreDetailsScreen extends StatefulWidget {
-  final StoreData store;
+  final int storeId;
 
-  const StoreDetailsScreen({super.key, required this.store});
+  const StoreDetailsScreen({super.key, required this.storeId});
 
   @override
-  _StoreDetailsScreenState createState() => _StoreDetailsScreenState();
+  State<StoreDetailsScreen> createState() => _StoreDetailsScreenState();
 }
 
 class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
-  bool isFavorite = false; // متغير لتتبع حالة المفضلة
+  final StoreService _storeService = StoreService();
+  
+  StoreDetailsDto? _store;
+  bool _isLoading = true;
+  bool _isFavorite = false;
+  String? _error;
 
-  void toggleFavorite() {
+  @override
+  void initState() {
+    super.initState();
+    // ✅ لا شيء هنا، فقط التهيئة
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // ✅ تحميل البيانات هنا بعد أن تصبح الترجمة جاهزة
+    _loadStoreDetails();
+  }
+
+  Future<void> _loadStoreDetails() async {
     setState(() {
-      isFavorite = !isFavorite;
+      _isLoading = true;
+      _error = null;
     });
 
-    // هنا يمكن إضافة منطق لتخزين المتاجر المفضلة، مثل تخزين في SharedPreferences أو قاعدة بيانات.
+    try {
+      final store = await _storeService.getStoreById(
+        widget.storeId,
+        language: context.locale.languageCode,
+      );
+      
+      if (mounted) {
+        setState(() {
+          _store = store;
+          _isFavorite = store.isFavorite;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString().replaceAll('Exception: ', '');
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (_store == null) return;
+
+    setState(() => _isFavorite = !_isFavorite);
+
+    try {
+      if (_isFavorite) {
+        await _storeService.addToFavorites(_store!.id);
+      } else {
+        await _storeService.removeFromFavorites(_store!.id);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isFavorite = !_isFavorite);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _launchPhone() async {
+    final phone = _store?.phone;
+    if (phone == null || phone.isEmpty) return;
+    
+    final url = 'tel:$phone';
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url));
+    }
+  }
+
+  Future<void> _launchWebsite() async {
+    final website = _store?.website;
+    if (website == null || website.isEmpty) return;
+    
+    var url = website;
+    if (!url.startsWith('http')) {
+      url = 'https://$url';
+    }
+    
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final scheme = Theme.of(context).colorScheme; // استخدم colorScheme للحصول على ألوان الثيم
-    final isDark = Theme.of(context).brightness == Brightness.dark; // تحديد الوضع الداكن أو الفاتح
-    final locale = context.locale; // 🔹 معرفة اللغة الحالية
-
-    final textColor = isDark ? Colors.white : Colors.black; // تحديد لون النص بناءً على الوضع
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final locale = context.locale.languageCode;
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white, // الخلفية بناءً على الوضع
+      backgroundColor: isDark ? Colors.black : Colors.white,
       appBar: CustomAppBar(
-        title: 'smart_mall_guide'.tr(),
+        title: 'store_details'.tr(),
         showBackButton: true,
         showProfileIcon: false,
       ),
-
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),  // مسافة padding موحدة
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-
-            // 👤 Store Info Card (اسم المتجر + الوصف)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark ? Colors.grey[850] : Colors.grey[200],
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // صورة المتجر
-                  SizedBox(
-                    width: double.infinity,
-                    height: 240,
-                    child: widget.store.image.startsWith('http')
-                        ? Image.network(widget.store.image, fit: BoxFit.cover)
-                        : Image.asset(widget.store.image, fit: BoxFit.cover),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 64, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text(_error!),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadStoreDetails,
+                        child: Text('retry'.tr()),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
+                )
+              : _store == null
+                  ? Center(child: Text('store_not_found'.tr()))
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ✅ Store Info Card
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.grey[850] : Colors.grey[200],
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // صورة المتجر
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: _store!.imageUrl != null
+                                      ? Image.network(
+                                          _store!.imageUrl!,
+                                          width: double.infinity,
+                                          height: 240,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => Container(
+                                            height: 240,
+                                            color: Colors.grey[300],
+                                            child: const Icon(Icons.store, size: 80),
+                                          ),
+                                        )
+                                      : Container(
+                                          height: 240,
+                                          color: Colors.grey[300],
+                                          child: const Icon(Icons.store, size: 80),
+                                        ),
+                                ),
+                                const SizedBox(height: 16),
 
-                  // اسم المتجر حسب اللغة
-                  Text(
-                    locale.languageCode == 'ar' ? widget.store.nameAr : widget.store.nameEn,
-                    style: textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: textColor,  // تغيير اللون بناءً على الوضع
+                                // اسم المتجر
+                                Text(
+                                  _store!.getName(locale),
+                                  style: textTheme.headlineSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+
+                                // الوصف
+                                Text(
+                                  _store!.getDescription(locale) ?? '',
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          Text(
+                            'store_details'.tr(),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // ✅ معلومات المتجر
+                          Card(
+                            color: isDark ? Colors.grey[850] : Colors.grey[200],
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildInfoRow(
+                                    'category'.tr(),
+                                    _store!.getCategoryName(locale) ?? '—',
+                                    isDark,
+                                  ),
+                                  const Divider(),
+                                  _buildInfoRow(
+                                    'floor'.tr(),
+                                    '${_store!.floor}',
+                                    isDark,
+                                  ),
+                                  const Divider(),
+                                  _buildInfoRow(
+                                    'open_hours'.tr(),
+                                    _store!.openHours ?? '—',
+                                    isDark,
+                                  ),
+                                  if (_store!.averageRating > 0) ...[
+                                    const Divider(),
+                                    _buildInfoRow(
+                                      'rating'.tr(),
+                                      '${_store!.averageRating.toStringAsFixed(1)} (${_store!.ratingsCount} ${'reviews'.tr()})',
+                                      isDark,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          // ✅ رقم الهاتف (قابل للنقر)
+                          if (_store!.phone != null && _store!.phone!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 16),
+                              child: Card(
+                                color: isDark ? Colors.grey[850] : Colors.grey[200],
+                                elevation: 4,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: InkWell(
+                                  onTap: _launchPhone,
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: scheme.primary.withOpacity(0.2),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Icon(Icons.phone,
+                                              color: scheme.primary, size: 24),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'phone_number'.tr(),
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                _store!.phone!,
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Icon(Icons.arrow_forward_ios,
+                                            size: 16, color: Colors.grey),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                          // ✅ الموقع الإلكتروني (قابل للنقر)
+                          if (_store!.website != null && _store!.website!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 16),
+                              child: Card(
+                                color: isDark ? Colors.grey[850] : Colors.grey[200],
+                                elevation: 4,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: InkWell(
+                                  onTap: _launchWebsite,
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: scheme.primary.withOpacity(0.2),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Icon(Icons.language,
+                                              color: scheme.primary, size: 24),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'website'.tr(),
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                _store!.website!,
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Icon(Icons.open_in_new,
+                                            size: 16, color: Colors.grey),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                          const SizedBox(height: 24),
+
+                          // ✅ زر المفضلة
+                                                    Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: ElevatedButton.icon(
+                              onPressed: _toggleFavorite,
+                              icon: Icon(
+                                _isFavorite ? Icons.favorite : Icons.favorite_border,
+                                color: isDark ? Colors.black : Colors.white,
+                              ),
+                              label: Text(
+                                _isFavorite ? 'remove_from_favorites'.tr() : 'add_to_favorites'.tr(),
+                                style: TextStyle(
+                                  color: isDark ? Colors.black : Colors.white,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _isFavorite ? scheme.secondary : scheme.primary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-
-                  // الوصف حسب اللغة
-                  Text(
-                    locale.languageCode == 'ar'
-                        ? widget.store.descriptionAr
-                        : widget.store.descriptionEn,
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: textColor.withOpacity(0.7),  // تغيير اللون بناءً على الوضع
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            Text(
-              'store_details'.tr(),
-              style: TextStyle(
-                color: textColor,  // تغيير اللون بناءً على الوضع
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // عرض الحقول المطلوبة داخل بطاقة واحدة
-            Card(
-              color: isDark ? Colors.grey[850] : Colors.grey[200],  // اللون الثابت المناسب
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildInfoRow('Category', widget.store.category, textColor),
-                    _buildInfoRow('Floor', widget.store.floor.toString(), textColor),
-                    _buildInfoRow('Rating', '${widget.store.rating} (${widget.store.ratingCount})', textColor),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 18),
-
-            // عرض رقم الهاتف
-            Card(
-              color: isDark ? Colors.grey[850] : Colors.grey[200],
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: _buildInfoRow('Phone', widget.store.phone, textColor),
-              ),
-            ),
-
-            const SizedBox(height: 18),
-
-            // عرض الموقع الإلكتروني
-            Card(
-              color: isDark ? Colors.grey[850] : Colors.grey[200],
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: _buildInfoRow('Website', widget.store.website, textColor),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // زر لتعديل المفضلة
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: ElevatedButton.icon(
-                onPressed: toggleFavorite,
-                icon: Icon(
-                  isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: isDark ? Colors.black : Colors.white, 
-                ),
-                label: Text(
-                  isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
-                  style: TextStyle(
-                    color: isDark ? Colors.black : Colors.white,  // تغيير لون النص حسب الوضع
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isFavorite ? scheme.secondary : scheme.primary, // تغيير اللون حسب الثيم
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
-  // Widget لعرض المعلومات داخل البطاقة الواحدة
-  Widget _buildInfoRow(String title, String value, Color textColor) {
+  Widget _buildInfoRow(String title, String value, bool isDark) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            title.tr(),  // عنوان الحقل (مثلاً "Phone Number")
+            title,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: textColor,  // تغيير اللون بناءً على الوضع
+              color: isDark ? Colors.white70 : Colors.black54,
             ),
           ),
-          Text(
-            value,  // القيمة المعروضة (مثل "+1 234 567 890")
-            style: TextStyle(
-              fontSize: 16,
-              color: textColor.withOpacity(0.7),  // تغيير اللون بناءً على الوضع
+          Flexible(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 15,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+              textAlign: TextAlign.end,
             ),
           ),
         ],

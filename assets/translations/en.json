@@ -23,7 +23,7 @@
   "choose_password": "Choose Password",
   "confirm_password": "Confirm Password",
   "phone_number": "Phone number",
-  "gender": "Select your gender",
+  "gender": "Gender",
   "select_gender": "Select your gender",
   "male": "Male",
   "female": "Female",
@@ -70,7 +70,6 @@
   
   "account_settings": "Personal Info",
   "Phone Number": "Phone Number",
-  "Gender": "Gender",
   "Date of Birth": "Date of Birth",
   "edit_profile": "Edit Profile Info",
   "change_password": "Change Password",
@@ -266,7 +265,14 @@
   "delete_store": "Delete Store",
   "store_status": "Store Status",
   "image_url": "Image URL",
-  "all_stores":"All Stores"
+  "all_stores":"All Stores",
+
+  "Male": "Male",
+  "Female": "Female",
+  "User": "User",
+  "member_since": "Member Since",
+    "no_favorites": "No favorites yet",
+  "add_favorites_hint": "You can add items to your favorites"
 
 
 }

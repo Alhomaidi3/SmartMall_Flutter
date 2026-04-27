@@ -8,6 +8,7 @@ class User {
   final String role;
   final bool isActive;
   final DateTime createdAt; 
+  final DateTime? dateOfBirth; 
   
   User({
     required this.id,
@@ -18,7 +19,8 @@ class User {
     this.profileImageUrl,
     required this.role,
     required this.isActive,
-    required this.createdAt,  
+    required this.createdAt, 
+    this.dateOfBirth, 
   });
   
   factory User.fromJson(Map<String, dynamic> json) {
@@ -33,9 +35,12 @@ class User {
       isActive: json['isActive'] ?? true,
       createdAt: json['createdAt'] != null 
           ? DateTime.parse(json['createdAt']) 
-          : DateTime.now(), 
+          : DateTime.now(),
+      dateOfBirth: json['dateOfBirth'] != null   // ✅ أضف هذا السطر
+          ? DateTime.parse(json['dateOfBirth']) 
+          : null,
     );
   }
   
-bool get isAdmin => role.toLowerCase().trim() == 'admin';
+  bool get isAdmin => role.toLowerCase().trim() == 'admin';
 }

@@ -23,7 +23,7 @@
   "choose_password": "اختر كلمة المرور",
   "confirm_password": "تأكيد كلمة المرور",
   "phone_number": "رقم الهاتف",
-  "gender": "اختر الجنس",
+  "gender": "الجنس",
   "select_gender": "اختر الجنس",
   "male": "ذكر",
   "female": "أنثى",
@@ -70,7 +70,6 @@
   
   "account_settings": "معلومات الحساب",
   "Phone Number": "رقم الهاتف",
-  "Gender": "الجنس",
   "Date of Birth": "تاريخ الميلاد",
   "edit_profile": "تعديل الملف الشخصي",
   "change_password": "تغيير كلمة المرور",
@@ -264,5 +263,14 @@
   "delete_store": "حذف المتجر",
   "store_status": "حالة المتجر",
   "image_url": "رابط الصورة",
-  "all_stores":"جميع المتاجر"
+  "all_stores":"جميع المتاجر",
+  
+  "Male": "ذكر",
+  "Female": "أنثى",
+  "User": "مستخدم",
+  "member_since": "عضو منذ",
+    "no_favorites": "لا توجد مفضلات بعد",
+  "add_favorites_hint": "يمكنك إضافة العناصر إلى المفضلة"
+
+
 }

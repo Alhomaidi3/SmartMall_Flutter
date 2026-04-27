@@ -1,22 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../services/storage_service.dart';
 import '../core/constants/api_endpoints.dart';
 
 class ApiService {
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
-
-  Future<String?> _getToken() async {
-    return await _storage.read(key: 'auth_token');
-  }
-
-  String _addLanguage(String url, String languageParam) {
-    if (url.contains('?')) {
-      return "$url&$languageParam";
-    } else {
-      return "$url?$languageParam";
-    }
-  }
 
   Future<Map<String, String>> _getHeaders({bool requiresAuth = true}) async {
     final headers = {
@@ -25,13 +12,21 @@ class ApiService {
     };
     
     if (requiresAuth) {
-      final token = await _getToken();
+      final token = await StorageService.getToken();
       if (token != null) {
         headers["Authorization"] = "Bearer $token";
       }
     }
     
     return headers;
+  }
+
+  String _addLanguage(String url, String languageParam) {
+    if (url.contains('?')) {
+      return "$url&$languageParam";
+    } else {
+      return "$url?$languageParam";
+    }
   }
 
   Future<Map<String, dynamic>> get(
@@ -127,37 +122,55 @@ class ApiService {
     }
   }
 
-Future<Map<String, dynamic>> patch(
-  String endpoint,
-  dynamic data, {
-  bool requiresAuth = true,
-  String language = 'ar',
-}) async {
-  try {
-    var url = "${ApiEndpoints.baseUrl}$endpoint";
-    url = _addLanguage(url, 'language=$language');
+  Future<Map<String, dynamic>> patch(
+    String endpoint,
+    dynamic data, {
+    bool requiresAuth = true,
+    String language = 'ar',
+  }) async {
+    try {
+      var url = "${ApiEndpoints.baseUrl}$endpoint";
+      url = _addLanguage(url, 'language=$language');
 
-    final bodyToSend = jsonEncode(data); 
+      final bodyToSend = jsonEncode(data); 
 
-    final response = await http.patch(
-      Uri.parse(url),
-      headers: await _getHeaders(requiresAuth: requiresAuth),
-      body: bodyToSend,
-    );
+      final response = await http.patch(
+        Uri.parse(url),
+        headers: await _getHeaders(requiresAuth: requiresAuth),
+        body: bodyToSend,
+      );
 
-    return _handleResponse(response);
-  } catch (e) {
-    throw ApiException(message: "Network error: $e", statusCode: 0);
+      return _handleResponse(response);
+    } catch (e) {
+      throw ApiException(message: "Network error: $e", statusCode: 0);
+    }
   }
-}
 
   Map<String, dynamic> _handleResponse(http.Response response) {
+    // ✅ معالجة 204 No Content
+    if (response.statusCode == 204) {
+      return {'success': true};
+    }
+    
+    // ✅ معالجة أي استجابة فارغة ناجحة
+    if (response.body.isEmpty) {
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return {'success': true};
+      }
+      throw ApiException(
+        message: 'حدث خطأ في الخادم',
+        statusCode: response.statusCode,
+        type: ApiErrorType.serverError,
+      );
+    }
+    
     final Map<String, dynamic> data = jsonDecode(response.body);
     
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return data;
     }
     
+    // معالجة الأخطاء
     if (response.statusCode == 400) {
       final message = data['message'] ?? 'بيانات غير صحيحة';
       throw ApiException(
@@ -213,7 +226,7 @@ Future<Map<String, dynamic>> patch(
   }
 
   Future<void> _handleUnauthorized() async {
-    await _storage.deleteAll();
+    await StorageService.clearAll();
   }
 }
 
