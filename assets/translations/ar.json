@@ -270,7 +270,15 @@
   "User": "مستخدم",
   "member_since": "عضو منذ",
     "no_favorites": "لا توجد مفضلات بعد",
-  "add_favorites_hint": "يمكنك إضافة العناصر إلى المفضلة"
-
+  "add_favorites_hint": "يمكنك إضافة العناصر إلى المفضلة",
+  "set_your_location": "حدد موقعك",
+  "tap_on_map_to_set_your_location": "اضغط في أي مكان على الخريطة لتحديد موقعك الحالي",
+  "tap_on_any_point_on_map": "اضغط على أي نقطة في الخريطة لتحديد موقعك",
+  "location_set": "تم تحديد الموقع!",
+  "default_location_set": "تم تحديد موقع افتراضي (المنتصف)",
+  "clear_route": "مسح المسار",
+  "route_cleared": "تم مسح المسار",
+  "directions_to": "الاتجاهات إلى",
+  "store_location_error": "موقع المحل غير متوفر"
 
 }

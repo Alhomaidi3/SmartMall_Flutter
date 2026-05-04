@@ -15,29 +15,20 @@ class MainScreen extends StatefulWidget {
 
 class MainScreenState extends State<MainScreen> {
   int currentIndex = 0;
+  int? _selectedStoreIdForMap;
 
-  late final List<Widget> pages;
-
-  void changeTab(int index) {
+  void changeTab(int index, {int? selectedStoreId}) {
     setState(() {
       currentIndex = index;
+      if (selectedStoreId != null) {
+        _selectedStoreIdForMap = selectedStoreId;
+      }
     });
   }
-
-  @override
-  void initState() {
-    super.initState();
-    pages = [
-      HomeScreen(
-        onProfilePressed: () => changeTab(2), // ✅ الذهاب للبروفايل
-      ),
-      MapScreen(
-        onProfilePressed: () => changeTab(2), // ✅ الذهاب للبروفايل
-      ),
-      ProfileScreen(
-        onThemeChanged: widget.onThemeChanged,
-      ),
-    ];
+  
+  // ✅ دالة لاستقبال طلب الاتجاهات من HomeScreen
+  void _handleDirectionsRequested(int storeId) {
+    changeTab(1, selectedStoreId: storeId);
   }
 
   @override
@@ -48,7 +39,20 @@ class MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: IndexedStack(
         index: currentIndex,
-        children: pages,
+        children: [
+          HomeScreen(
+            onProfilePressed: () => changeTab(2),
+            onDirectionsRequested: _handleDirectionsRequested, // ✅ تمرير المعالج
+          ),
+          MapScreen(
+            key: ValueKey(_selectedStoreIdForMap), // ✅ لإعادة بناء الخريطة عند تغيير ID المتجر
+            onProfilePressed: () => changeTab(2),
+            selectedStoreId: _selectedStoreIdForMap,
+          ),
+          ProfileScreen(
+            onThemeChanged: widget.onThemeChanged,
+          ),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: isDark ? Colors.grey[900] : Colors.grey[100],
@@ -57,7 +61,11 @@ class MainScreenState extends State<MainScreen> {
             isDark ? Colors.grey[500] : scheme.onSurface.withOpacity(0.6),
         currentIndex: currentIndex,
         onTap: (index) {
-          changeTab(index); // ✅ استخدام الدالة نفسها
+          changeTab(index);
+          if (index != 1) {
+            // ✅ إعادة تعيين ID المتجر عند مغادرة الخريطة
+            _selectedStoreIdForMap = null;
+          }
         },
         items: [
           BottomNavigationBarItem(

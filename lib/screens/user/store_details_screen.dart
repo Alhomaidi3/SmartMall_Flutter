@@ -4,7 +4,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '/widgets/widgets.dart';
 import '/services/store_service.dart';
 import '/models/store.dart';
-
 class StoreDetailsScreen extends StatefulWidget {
   final int storeId;
 
@@ -46,7 +45,6 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
         widget.storeId,
         language: context.locale.languageCode,
       );
-      
       if (mounted) {
         setState(() {
           _store = store;
@@ -217,45 +215,46 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
 
                           // ✅ معلومات المتجر
                           Card(
-                            color: isDark ? Colors.grey[850] : Colors.grey[200],
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildInfoRow(
-                                    'category'.tr(),
-                                    _store!.getCategoryName(locale) ?? '—',
-                                    isDark,
-                                  ),
-                                  const Divider(),
-                                  _buildInfoRow(
-                                    'floor'.tr(),
-                                    '${_store!.floor}',
-                                    isDark,
-                                  ),
-                                  const Divider(),
-                                  _buildInfoRow(
-                                    'open_hours'.tr(),
-                                    _store!.openHours ?? '—',
-                                    isDark,
-                                  ),
-                                  if (_store!.averageRating > 0) ...[
-                                    const Divider(),
-                                    _buildInfoRow(
-                                      'rating'.tr(),
-                                      '${_store!.averageRating.toStringAsFixed(1)} (${_store!.ratingsCount} ${'reviews'.tr()})',
-                                      isDark,
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ),
+  color: isDark ? Colors.grey[850] : Colors.grey[200],
+  elevation: 4,
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(16),
+  ),
+  child: Padding(
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildInfoRow(
+          'category'.tr(),
+          _store!.getCategoryName(locale) ?? '—',
+          isDark,
+        ),
+        const Divider(),
+        _buildInfoRow(
+          'floor'.tr(),
+          '${_store!.floor}',
+          isDark,
+        ),
+        const Divider(),
+        _buildInfoRow(
+          'open_hours'.tr(),
+          _store!.openHours ?? '—',
+          isDark,
+        ),
+        const Divider(),
+        _buildInfoRow(
+          'rating'.tr(),
+          _store!.ratingsCount == 0
+              ? 'no_ratings_yet'.tr()
+              : '${_store!.averageRating.toStringAsFixed(1)} (${_store!.ratingsCount} ${'reviews'.tr()})',
+          isDark,
+        ),
+      ],
+    ),
+  ),
+),
+
 
                           // ✅ رقم الهاتف (قابل للنقر)
                           if (_store!.phone != null && _store!.phone!.isNotEmpty)
@@ -316,7 +315,6 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
                               ),
                             ),
 
-                          // ✅ الموقع الإلكتروني (قابل للنقر)
                           if (_store!.website != null && _store!.website!.isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 16),
@@ -376,38 +374,59 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
                               ),
                             ),
 
-                          const SizedBox(height: 24),
+const SizedBox(height: 24),
 
-                          // ✅ زر المفضلة
-                                                    Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: ElevatedButton.icon(
-                              onPressed: _toggleFavorite,
-                              icon: Icon(
-                                _isFavorite ? Icons.favorite : Icons.favorite_border,
-                                color: isDark ? Colors.black : Colors.white,
-                              ),
-                              label: Text(
-                                _isFavorite ? 'remove_from_favorites'.tr() : 'add_to_favorites'.tr(),
-                                style: TextStyle(
-                                  color: isDark ? Colors.black : Colors.white,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _isFavorite ? scheme.secondary : scheme.primary,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              ),
-                            ),
-                          ),
-                        ],
+Row(
+  children: [
+    Expanded(
+      child: ElevatedButton.icon(
+        onPressed: () {
+          _navigateToMapWithStore(_store!);
+        },
+        icon: const Icon(Icons.directions),
+        label: Text('directions'.tr()),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.orange,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+        ),
+      ),
+    ),
+    const SizedBox(width: 12),
+    
+    Expanded(
+      child: ElevatedButton.icon(
+        onPressed: _toggleFavorite,
+        icon: Icon(
+          _isFavorite ? Icons.favorite : Icons.favorite_border,
+          color: Colors.white,
+        ),
+        label: Text(
+          _isFavorite ? 'remove_from_favorites'.tr() : 'add_to_favorites'.tr(),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.orange, // ✅ أزرق ثابت
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+        ),
+      ),
+    ),
+  ],
+),                        ],
                       ),
                     ),
     );
   }
-
+void _navigateToMapWithStore(StoreDetailsDto store) {
+  Navigator.pop(context, {
+    'navigateToMap': true,
+    'storeId': store.id,
+  });
+}
   Widget _buildInfoRow(String title, String value, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),

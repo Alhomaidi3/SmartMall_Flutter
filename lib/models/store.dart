@@ -261,41 +261,40 @@ class StoreDetailsDto extends StoreDto {
     required this.images,
   });
 
-  factory StoreDetailsDto.fromJson(Map<String, dynamic> json) {
-    final baseStore = StoreDto.fromJson(json);
-    
-    return StoreDetailsDto(
-      id: baseStore.id,
-      nameAr: baseStore.nameAr,
-      nameEn: baseStore.nameEn,
-      descriptionAr: baseStore.descriptionAr,
-      descriptionEn: baseStore.descriptionEn,
-      floor: baseStore.floor,
-      openHours: baseStore.openHours,
-      phone: baseStore.phone,
-      website: baseStore.website,
-      imageUrl: baseStore.imageUrl,
-      isActive: baseStore.isActive,
-      categoryId: baseStore.categoryId,
-      categoryNameAr: baseStore.categoryNameAr,
-      categoryNameEn: baseStore.categoryNameEn,
-      locationId: baseStore.locationId,
-      x: baseStore.x,
-      y: baseStore.y,
-      createdAt: baseStore.createdAt,
-      updatedAt: baseStore.updatedAt,
-      isFavorite: baseStore.isFavorite,
-      userRating: baseStore.userRating,
-      averageRating: baseStore.averageRating,
-      ratingsCount: baseStore.ratingsCount,
-      fullDescriptionAr: json['descriptionAr'] ?? json['fullDescriptionAr'] ?? '',
-      fullDescriptionEn: json['descriptionEn'] ?? json['fullDescriptionEn'] ?? '',
-      images: (json['images'] as List?)
-          ?.map((img) => StoreImageDto.fromJson(img))
-          .toList() ?? [],
-    );
-  }
-
+factory StoreDetailsDto.fromJson(Map<String, dynamic> json) {
+  final baseStore = StoreDto.fromJson(json);
+  
+  return StoreDetailsDto(
+    id: baseStore.id,
+    nameAr: baseStore.nameAr,
+    nameEn: baseStore.nameEn,
+    descriptionAr: json['descriptionAr'] ?? baseStore.descriptionAr,
+    descriptionEn: json['descriptionEn'] ?? baseStore.descriptionEn,
+    floor: baseStore.floor,
+    openHours: baseStore.openHours,
+    phone: baseStore.phone,
+    website: baseStore.website,
+    imageUrl: baseStore.imageUrl,
+    isActive: baseStore.isActive,
+    categoryId: baseStore.categoryId,
+    categoryNameAr: baseStore.categoryNameAr,
+    categoryNameEn: baseStore.categoryNameEn,
+    locationId: baseStore.locationId,
+    x: baseStore.x,
+    y: baseStore.y,
+    createdAt: baseStore.createdAt,
+    updatedAt: baseStore.updatedAt,
+    isFavorite: baseStore.isFavorite,
+    userRating: baseStore.userRating,
+    averageRating: baseStore.averageRating,
+    ratingsCount: baseStore.ratingsCount,
+    fullDescriptionAr: json['fullDescriptionAr'] ?? json['descriptionAr'] ?? '',
+    fullDescriptionEn: json['fullDescriptionEn'] ?? json['descriptionEn'] ?? '',
+    images: (json['images'] as List?)
+        ?.map((img) => StoreImageDto.fromJson(img))
+        .toList() ?? [],
+  );
+}
   String getFullDescription(String languageCode) {
     return languageCode == 'ar' ? fullDescriptionAr : fullDescriptionEn;
   }

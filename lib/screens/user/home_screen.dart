@@ -9,10 +9,13 @@ import '/models/category.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback onProfilePressed;
+  final void Function(int storeId) onDirectionsRequested; // ✅ إضافة هذا
 
   const HomeScreen({
     super.key,
     required this.onProfilePressed,
+        required this.onDirectionsRequested, // ✅ إضافة هذا
+
   });
 
   @override
@@ -37,6 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     // ✅ لا تستخدم الترجمة هنا
     // فقط قم بتهيئة الـ Controller
+  }
+  void _requestDirections(int storeId) {
+    widget.onDirectionsRequested(storeId);
   }
 
   @override
@@ -233,8 +239,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                               start: i == 0 ? 16 : 10,
                                               end: i == group.items.length - 1 ? 16 : 0,
                                             ),
-                                            child: StoreCard(store: store),
-                                          );
+                                            child: StoreCard(
+                                              store: store,
+    onDirectionsPressed: () => _requestDirections(store.id), // ✅ تمرير store.id
+                                                                                    )                                          );
                                         },
                                       ),
                                     ),
@@ -252,7 +260,13 @@ class _HomeScreenState extends State<HomeScreen> {
 // 🔹 بطاقة المتجر
 class StoreCard extends StatefulWidget {
   final StoreDto store;
-  const StoreCard({super.key, required this.store});
+  final VoidCallback? onDirectionsPressed; // ✅ إضافة هذا
+
+  const StoreCard({
+    super.key, 
+    required this.store,
+    this.onDirectionsPressed, // ✅ إضافة هذا
+  });
 
   @override
   State<StoreCard> createState() => _StoreCardState();
@@ -273,15 +287,21 @@ class _StoreCardState extends State<StoreCard> {
         onTapDown: (_) => setState(() => _scale = 0.95),
         onTapUp: (_) => setState(() => _scale = 1.0),
         onTapCancel: () => setState(() => _scale = 1.0),
-        onTap: () {
-          Navigator.push(
+        onTap: () async {
+          // ✅ انتظار النتيجة من StoreDetailsScreen
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => StoreDetailsScreen(storeId: widget.store.id),
             ),
           );
+          
+          // ✅ إذا تم طلب الاتجاهات، قم باستدعاء المعالج
+          if (result != null && result['navigateToMap'] == true && widget.onDirectionsPressed != null) {
+            widget.onDirectionsPressed!();
+          }
         },
-        child: AnimatedScale(
+                  child: AnimatedScale(
           scale: _scale,
           duration: const Duration(milliseconds: 150),
           child: Container(

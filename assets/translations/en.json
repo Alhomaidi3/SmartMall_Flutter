@@ -272,8 +272,16 @@
   "User": "User",
   "member_since": "Member Since",
     "no_favorites": "No favorites yet",
-  "add_favorites_hint": "You can add items to your favorites"
-
+  "add_favorites_hint": "You can add items to your favorites",
+    "set_your_location": "Set Your Location",
+  "tap_on_map_to_set_your_location": "Tap anywhere on the map to set your current location",
+  "tap_on_any_point_on_map": "Tap on any point on the map to set your location",
+  "location_set": "Location set!",
+  "default_location_set": "Default location set (center)",
+  "clear_route": "Clear route",
+  "route_cleared": "Route cleared",
+  "directions_to": "Directions to",
+  "store_location_error": "Store location not available"
 
 }
 
