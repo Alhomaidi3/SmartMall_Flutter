@@ -5,7 +5,6 @@ import '../models/store.dart';
 class StoreService {
   final ApiService _apiService = ApiService();
 
-  // 🔹 جلب جميع المتاجر (مقسمة)
   Future<PagedResponse<StoreDto>> getStores({
     int page = 1,
     int pageSize = 20,
@@ -40,42 +39,42 @@ class StoreService {
       throw Exception('فشل في تحميل المتاجر: $e');
     }
   }
-Future<PagedResponse<StoreDto>> getAllStoresForAdmin({
-  int page = 1,
-  int pageSize = 20,
-  String? category,
-  int? floor,
-  String language = 'ar',
-}) async {
-  try {
-    final queryParams = {
-      'page': page.toString(),
-      'pageSize': pageSize.toString(),
-      'language': language,
-      if (category != null && category.isNotEmpty) 'category': category,
-      if (floor != null) 'floor': floor.toString(),
-    };
 
-    final response = await _apiService.get(
-      '/stores/all',  // ✅ هذا الـ endpoint الجديد للمشرف
-      queryParams: queryParams,
-      requiresAuth: true,  // ✅ يتطلب توكن المشرف
-    );
+  Future<PagedResponse<StoreDto>> getAllStoresForAdmin({
+    int page = 1,
+    int pageSize = 20,
+    String? category,
+    int? floor,
+    String language = 'ar',
+  }) async {
+    try {
+      final queryParams = {
+        'page': page.toString(),
+        'pageSize': pageSize.toString(),
+        'language': language,
+        if (category != null && category.isNotEmpty) 'category': category,
+        if (floor != null) 'floor': floor.toString(),
+      };
 
-    if (response['success'] == true) {
-      return PagedResponse.fromJson(
-        response['data'],
-        (json) => StoreDto.fromJson(json),
+      final response = await _apiService.get(
+        '/stores/all',
+        queryParams: queryParams,
+        requiresAuth: true,
       );
-    } else {
-      throw Exception(response['message'] ?? 'فشل في تحميل المتاجر');
-    }
-  } catch (e) {
-    throw Exception('فشل في تحميل المتاجر: $e');
-  }
-}
 
-  // 🔹 جلب تفاصيل متجر واحد
+      if (response['success'] == true) {
+        return PagedResponse.fromJson(
+          response['data'],
+          (json) => StoreDto.fromJson(json),
+        );
+      } else {
+        throw Exception(response['message'] ?? 'فشل في تحميل المتاجر');
+      }
+    } catch (e) {
+      throw Exception('فشل في تحميل المتاجر: $e');
+    }
+  }
+
   Future<StoreDetailsDto> getStoreById(int id, {String language = 'ar'}) async {
     try {
       final response = await _apiService.get(
@@ -94,38 +93,35 @@ Future<PagedResponse<StoreDto>> getAllStoresForAdmin({
     }
   }
 
-  // 🔹 البحث في المتاجر
-Future<List<StoreDto>> searchStores(
-  String query, {
-  String language = 'ar',
-}) async {
-  if (query.length < 2) {
-    throw Exception('أدخل كلمة بحث من حرفين على الأقل');
-  }
-
-  try {
-    final response = await _apiService.get(
-      '/stores/search',
-      queryParams: {
-        'q': query,
-        'language': language,
-      },
-      requiresAuth: false,
-    );
-
-    if (response['success'] == true) {
-      // ✅ التصحيح: response['data'] هي List وليس Map
-      final List<dynamic> storesData = response['data'];
-      return storesData.map((json) => StoreDto.fromJson(json)).toList();
-    } else {
-      throw Exception(response['message'] ?? 'لا توجد نتائج');
+  Future<List<StoreDto>> searchStores(
+    String query, {
+    String language = 'ar',
+  }) async {
+    if (query.length < 2) {
+      throw Exception('أدخل كلمة بحث من حرفين على الأقل');
     }
-  } catch (e) {
-    throw Exception('فشل في البحث: $e');
-  }
-}
 
-  // 🔹 جلب المتاجر حسب الطابق
+    try {
+      final response = await _apiService.get(
+        '/stores/search',
+        queryParams: {
+          'q': query,
+          'language': language,
+        },
+        requiresAuth: false,
+      );
+
+      if (response['success'] == true) {
+        final List<dynamic> storesData = response['data'];
+        return storesData.map((json) => StoreDto.fromJson(json)).toList();
+      } else {
+        throw Exception(response['message'] ?? 'لا توجد نتائج');
+      }
+    } catch (e) {
+      throw Exception('فشل في البحث: $e');
+    }
+  }
+
   Future<List<StoreDto>> getStoresByFloor(int floor, {String language = 'ar'}) async {
     try {
       final response = await _apiService.get(
@@ -145,7 +141,6 @@ Future<List<StoreDto>> searchStores(
     }
   }
 
-  // 🔹 جلب المتاجر المميزة
   Future<List<StoreDto>> getFeaturedStores({
     int limit = 10,
     String language = 'ar',
@@ -171,7 +166,6 @@ Future<List<StoreDto>> searchStores(
     }
   }
 
-  // 🔹 جلب المتاجر حسب التصنيف
   Future<PagedResponse<StoreDto>> getStoresByCategory(
     int categoryId, {
     int page = 1,
@@ -202,7 +196,6 @@ Future<List<StoreDto>> searchStores(
     }
   }
 
-  // 🔹 إنشاء متجر جديد (للمشرف فقط)
   Future<StoreDetailsDto> createStore(StoreCreateDto dto) async {
     try {
       final response = await _apiService.post(
@@ -212,7 +205,6 @@ Future<List<StoreDto>> searchStores(
       );
 
       if (response['success'] == true) {
-        // بعد الإنشاء، نجلب تفاصيل المتجر
         final storeId = response['data']['id'] ?? response['data']['storeId'];
         return await getStoreById(storeId);
       } else {
@@ -223,7 +215,6 @@ Future<List<StoreDto>> searchStores(
     }
   }
 
-  // 🔹 تحديث متجر (للمشرف فقط)
   Future<void> updateStore(int id, StoreUpdateDto dto) async {
     try {
       final response = await _apiService.put(
@@ -240,7 +231,6 @@ Future<List<StoreDto>> searchStores(
     }
   }
 
-  // 🔹 حذف متجر (للمشرف فقط) - Soft Delete
   Future<void> deleteStore(int id) async {
     try {
       final response = await _apiService.delete(
@@ -256,7 +246,6 @@ Future<List<StoreDto>> searchStores(
     }
   }
 
-  // 🔹 إضافة متجر إلى المفضلة
   Future<void> addToFavorites(int storeId) async {
     try {
       final response = await _apiService.post(
@@ -273,7 +262,6 @@ Future<List<StoreDto>> searchStores(
     }
   }
 
-  // 🔹 إزالة متجر من المفضلة
   Future<void> removeFromFavorites(int storeId) async {
     try {
       final response = await _apiService.delete(
@@ -289,7 +277,6 @@ Future<List<StoreDto>> searchStores(
     }
   }
 
-  // 🔹 جلب المتاجر المفضلة للمستخدم
   Future<List<StoreDto>> getFavoriteStores({String language = 'ar'}) async {
     try {
       final response = await _apiService.get(
@@ -309,7 +296,6 @@ Future<List<StoreDto>> searchStores(
     }
   }
 
-  // 🔹 إضافة تقييم لمتجر
   Future<void> rateStore(int storeId, int rating, {String? comment}) async {
     if (rating < 1 || rating > 5) {
       throw Exception('التقييم يجب أن يكون بين 1 و 5');
@@ -333,11 +319,10 @@ Future<List<StoreDto>> searchStores(
     }
   }
 
-  // 🔹 جلب المتاجر القريبة (حسب الموقع)
   Future<List<StoreDto>> getNearbyStores({
     required double x,
     required double y,
-    double radius = 100.0, // متر
+    double radius = 100.0,
     int limit = 20,
     String language = 'ar',
   }) async {

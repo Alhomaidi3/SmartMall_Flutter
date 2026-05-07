@@ -6,58 +6,14 @@ export 'admin_bottom_navigation_bar.dart';
 export 'custom_app_bar.dart';
 export 'show_message.dart';
 export 'unified_card.dart';
-export 'status_filter_chip.dart';
-export 'filter_chips_row.dart';
+export 'filter_chips.dart';
 export 'unified_stats_row.dart';
 export 'section_title.dart';
 export 'unified_text_field.dart';
 export 'unified_dropdown.dart';
-export 'unified_form_button.dart';
+export 'unified_button.dart';
 export 'unified_loading_state.dart';
 
-/// 🔹 Main Button
-class MainButton extends StatelessWidget {
-  final String text;
-  final VoidCallback onPressed;
-  final double width;
-  final Color? backgroundColor;
-  final Color? textColor;
-
-  const MainButton({
-    required this.text,
-    required this.onPressed,
-    this.width = 250,
-    this.backgroundColor,
-    this.textColor,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: width,
-      height: 50,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor ?? scheme.primary,
-          foregroundColor: textColor ?? scheme.onPrimary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        onPressed: onPressed,
-        child: Text(text),
-      ),
-    );
-  }
-}
-
-/// 🔹 Social Icon
 class SocialIcon extends StatelessWidget {
   final IconData icon;
   final Color color;
@@ -74,7 +30,6 @@ class SocialIcon extends StatelessWidget {
   }
 }
 
-/// 🔹 Map Chip
 class MapChip extends StatelessWidget {
   final String title;
   const MapChip({super.key, required this.title});
@@ -103,7 +58,6 @@ class MapChip extends StatelessWidget {
   }
 }
 
-/// 🔹 Map Marker
 class MapMarker extends StatelessWidget {
   final String label;
   const MapMarker({super.key, required this.label});
@@ -130,7 +84,6 @@ class MapMarker extends StatelessWidget {
   }
 }
 
-/// 🔹 Custom Search Bar
 class CustomSearchBar extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final String? hintText;

@@ -50,21 +50,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _launchUrl(BuildContext context, String url) async {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black;
-
+  Future<void> _launchUrl(String url) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text('confirmation'.tr()),
         content: Text.rich(
           TextSpan(
             children: [
-              TextSpan(
-                text: 'open_link_confirmation'.tr(),
-                style: TextStyle(color: textColor),
-              ),
+              TextSpan(text: 'open_link_confirmation'.tr()),
               TextSpan(
                 text: '\n$url',
                 style: const TextStyle(color: Colors.blue),
@@ -74,60 +68,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: Text('cancel'.tr()),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: Text('ok'.tr()),
           ),
         ],
       ),
     );
 
-    if (confirmed ?? false) {
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('cannot_launch'.tr())),
-        );
-      }
+    if (!mounted || !(confirmed ?? false)) return;
+
+    final uri = Uri.parse(url);
+
+    final canLaunch = await canLaunchUrl(uri);
+
+    if (!mounted) return;
+
+    if (canLaunch) {
+      await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    } else {
+      showMessage(
+        context,
+        'cannot_launch'.tr(),
+        type: MessageType.error,
+      );
     }
   }
-
-  Future<bool> _confirmAction(
-    BuildContext context, {
-    required String title,
-    required String message,
-  }) async {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black;
-
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title.tr()),
-        content: Text(
-          message.tr(),
-          style: TextStyle(color: textColor),
+    Future<bool> _confirmAction(
+      BuildContext context, {
+      required String title,
+      required String message,
+    }) async {
+      final result = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(title.tr()),
+          content: Text(message.tr()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text('cancel'.tr()),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text('ok'.tr()),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('cancel'.tr()),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('ok'.tr()),
-          ),
-        ],
-      ),
-    );
+      );
 
-    return result ?? false;
-  }
+      return result ?? false;
+    }
 
   Future<void> _logout() async {
     final confirmed = await _confirmAction(
@@ -140,7 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       try {
         await _userService.logout();
       } catch (e) {
-        // تجاهل أخطاء تسجيل الخروج
+        // Ignore logout errors
       }
       
       if (mounted) {
@@ -156,7 +153,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: isDark ? Colors.black : Colors.white,
@@ -174,67 +171,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    /// 👤 Profile Card
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.grey[850] : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 28,
-                            backgroundColor: Colors.orange,
-                            backgroundImage: _user?.profileImageUrl != null
-                                ? NetworkImage(_user!.profileImageUrl!)
-                                : null,
-                            child: _user?.profileImageUrl == null
-                                ? const Icon(Icons.person, color: Colors.white, size: 30)
-                                : null,
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _user?.fullName ?? '—',
-                                  style: TextStyle(
-                                    color: scheme.onSurface,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _user?.email ?? '—',
-                                  style: TextStyle(
-                                    color: scheme.onSurface.withOpacity(0.6),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_user?.isActive == false)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                'inactive'.tr(),
-                                style: const TextStyle(color: Colors.red, fontSize: 12),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
+                    _buildProfileCard(isDark, scheme),
 
                     const SizedBox(height: 24),
 
-                    /// ⚙ Account Section
                     Text(
                       'account'.tr(),
                       style: TextStyle(
@@ -273,7 +213,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       },
                     ),
 
-                    /// 🎨 Appearance
                     SettingsTile(
                       icon: Icons.color_lens_outlined,
                       title: 'appearance'.tr(),
@@ -286,7 +225,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
 
-                    /// 🌐 Language
                     SettingsTile(
                       icon: Icons.language,
                       title: 'language'.tr(),
@@ -318,7 +256,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                     const SizedBox(height: 24),
 
-                    /// ℹ More Section
                     Text(
                       'more'.tr(),
                       style: TextStyle(
@@ -333,18 +270,77 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       icon: Icons.help_outline,
                       title: 'help_support'.tr(),
                       isDark: isDark,
-                      onTap: () => _launchUrl(context, 'https://www.google.com'),
+                      onTap: () => _launchUrl('https://www.google.com'),
                     ),
                     SettingsTile(
                       icon: Icons.info_outline,
                       title: 'about_app'.tr(),
                       isDark: isDark,
-                      onTap: () => _launchUrl(context, 'https://www.google.com'),
+                      onTap: () => _launchUrl('https://www.google.com'),
                     ),
                   ],
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildProfileCard(bool isDark, ColorScheme scheme) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[850] : Colors.grey[200],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: Colors.orange,
+            backgroundImage: _user?.profileImageUrl != null
+                ? NetworkImage(_user!.profileImageUrl!)
+                : null,
+            child: _user?.profileImageUrl == null
+                ? const Icon(Icons.person, color: Colors.white, size: 30)
+                : null,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _user?.fullName ?? '—',
+                  style: TextStyle(
+                    color: scheme.onSurface,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _user?.email ?? '—',
+                  style: TextStyle(
+                    color: scheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_user?.isActive == false)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'inactive'.tr(),
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

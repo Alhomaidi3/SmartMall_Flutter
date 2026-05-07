@@ -1,5 +1,3 @@
-// lib/screens/admin/category_form_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '/widgets/widgets.dart';
@@ -21,7 +19,6 @@ class _CategoryFormScreenState extends State<CategoryFormScreen> {
   
   late TextEditingController _nameArController;
   late TextEditingController _nameEnController;
-  late TextEditingController _iconUrlController;
   
   bool _isActive = true;
   bool _isEditing = false;
@@ -34,7 +31,6 @@ class _CategoryFormScreenState extends State<CategoryFormScreen> {
     
     _nameArController = TextEditingController(text: widget.category?.nameAr ?? '');
     _nameEnController = TextEditingController(text: widget.category?.nameEn ?? '');
-    _iconUrlController = TextEditingController(text: widget.category?.iconUrl ?? '');
     _isActive = widget.category?.isActive ?? true;
   }
 
@@ -42,7 +38,6 @@ class _CategoryFormScreenState extends State<CategoryFormScreen> {
   void dispose() {
     _nameArController.dispose();
     _nameEnController.dispose();
-    _iconUrlController.dispose();
     super.dispose();
   }
 
@@ -53,23 +48,19 @@ class _CategoryFormScreenState extends State<CategoryFormScreen> {
 
     try {
       if (_isEditing) {
-        // ✅ تحديث فئة موجودة
         await _categoryService.updateCategory(
           widget.category!.id,
           CategoryUpdateDto(
             nameAr: _nameArController.text.trim(),
             nameEn: _nameEnController.text.trim(),
-            iconUrl: _iconUrlController.text.trim().isEmpty ? null : _iconUrlController.text.trim(),
             isActive: _isActive,
           ),
         );
       } else {
-        // ✅ إضافة فئة جديدة
         await _categoryService.createCategory(
           CategoryCreateDto(
             nameAr: _nameArController.text.trim(),
             nameEn: _nameEnController.text.trim(),
-            iconUrl: _iconUrlController.text.trim().isEmpty ? null : _iconUrlController.text.trim(),
           ),
         );
       }
@@ -187,7 +178,6 @@ class _CategoryFormScreenState extends State<CategoryFormScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: scheme.surface,
@@ -205,39 +195,20 @@ class _CategoryFormScreenState extends State<CategoryFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ✅ أيقونة الفئة
                     Center(
                       child: Container(
                         width: 100,
                         height: 100,
                         decoration: BoxDecoration(
-                          color: scheme.primary.withOpacity(0.1),
+                          color: scheme.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                           border: Border.all(color: scheme.primary, width: 2),
-                        ),
-                        child: ClipOval(
-                          child: _iconUrlController.text.isNotEmpty
-                              ? Image.network(
-                                  _iconUrlController.text,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Icon(
-                                    Icons.category,
-                                    size: 50,
-                                    color: scheme.primary,
-                                  ),
-                                )
-                              : Icon(
-                                  Icons.category,
-                                  size: 50,
-                                  color: scheme.primary,
-                                ),
                         ),
                       ),
                     ),
 
                     const SizedBox(height: 32),
 
-                    // ✅ معلومات الفئة
                     SectionTitle(title: 'category_info'.tr()),
                     const SizedBox(height: 16),
 
@@ -269,29 +240,17 @@ class _CategoryFormScreenState extends State<CategoryFormScreen> {
                       },
                     ),
 
-                    const SizedBox(height: 16),
-
-                    UnifiedTextField(
-                      controller: _iconUrlController,
-                      label: 'icon_url'.tr(),
-                      icon: Icons.link,
-                      keyboardType: TextInputType.url,
-                    ),
-
                     const SizedBox(height: 32),
 
-                    // ✅ زر الحفظ
-                    UnifiedFormButton(
+                    UnifiedButton.form(
                       onPressed: _saveCategory,
                       text: _isEditing ? 'update_category'.tr() : 'add_category'.tr(),
                       icon: Icons.save,
                     ),
 
-                    // ✅ أزرار الإدارة (للتعديل فقط)
                     if (_isEditing) ...[
                       const SizedBox(height: 16),
 
-                      // زر تفعيل/تعطيل
                       SizedBox(
                         width: double.infinity,
                         height: 50,
@@ -313,11 +272,9 @@ class _CategoryFormScreenState extends State<CategoryFormScreen> {
 
                       const SizedBox(height: 16),
 
-                      // زر حذف
-                      UnifiedFormButton(
+                      UnifiedButton.form(
                         onPressed: _deleteCategory,
                         text: 'delete_category'.tr(),
-                        isOutlined: true,
                         isDestructive: true,
                         icon: Icons.delete_outline,
                       ),

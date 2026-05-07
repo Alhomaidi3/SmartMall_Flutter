@@ -20,7 +20,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   late TextEditingController _genderController;
-  DateTime? _selectedDate;  
+  DateTime? _selectedDate;
   String? _selectedRole;
   bool _isActive = true;
   bool _isEditing = false;
@@ -31,7 +31,6 @@ class _UserFormScreenState extends State<UserFormScreen> {
   final List<String> _roles = ['user', 'admin'];
   final List<String> _genders = ['male', 'female'];
   
-  // ✅ متغيرات للتحكم في صلاحيات الإدمن
   bool _isCurrentUserAdmin = false;
   bool _isLoadingCurrentUser = true;
 
@@ -44,15 +43,13 @@ class _UserFormScreenState extends State<UserFormScreen> {
     _emailController = TextEditingController(text: widget.user?.email ?? '');
     _phoneController = TextEditingController(text: widget.user?.phone ?? '');
     _genderController = TextEditingController(text: widget.user?.gender ?? '');
-     _selectedDate = widget.user?.dateOfBirth;
+    _selectedDate = widget.user?.dateOfBirth;
     _selectedRole = widget.user?.role.toLowerCase() ?? 'user';
     _isActive = widget.user?.isActive ?? true;
     
-    // ✅ تحقق من صلاحيات المستخدم الحالي
     _checkIfCurrentUserIsAdmin();
   }
   
-  /// التحقق إذا كان المستخدم الحالي أدمن
   Future<void> _checkIfCurrentUserIsAdmin() async {
     setState(() => _isLoadingCurrentUser = true);
     try {
@@ -78,80 +75,66 @@ class _UserFormScreenState extends State<UserFormScreen> {
     super.dispose();
   }
 
-Future<void> _saveUser() async {
-  if (!_formKey.currentState!.validate()) return;
+  Future<void> _saveUser() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  setState(() => _isLoading = true);
+    setState(() => _isLoading = true);
 
-  try {
-    if (_isEditing) {
-      // ✅ بيانات عامة (مسموح للجميع)
-      final updateData = {
-        'fullName': _fullNameController.text.trim(),
-        'phone': _phoneController.text.trim(),
-        'gender': _genderController.text.trim(),
-        'dateOfBirth': _selectedDate?.toIso8601String(), 
-      };
-      
-      // ✅ التمييز بين المستخدم العادي والأدمن
-      if (_isCurrentUserAdmin) {
-        // 🔹 الأدمن: يستخدم PUT /Users/{id}
-        await _userService.updateUser(widget.user!.id, updateData);
+    try {
+      if (_isEditing) {
+        final updateData = {
+          'fullName': _fullNameController.text.trim(),
+          'phone': _phoneController.text.trim(),
+          'gender': _genderController.text.trim(),
+          'dateOfBirth': _selectedDate?.toIso8601String(),
+        };
         
-        // تحديث الحالة والدور (لأدمن فقط)
-        if (_isActive != widget.user!.isActive) {
-          await _userService.toggleUserStatus(widget.user!.id, _isActive);
+        if (_isCurrentUserAdmin) {
+          await _userService.updateUser(widget.user!.id, updateData);
+          
+          if (_isActive != widget.user!.isActive) {
+            await _userService.toggleUserStatus(widget.user!.id, _isActive);
+          }
+          if (_selectedRole != widget.user!.role.toLowerCase()) {
+            await _userService.changeUserRole(
+              widget.user!.id,
+              _selectedRole!.toLowerCase(),
+            );
+          }
+        } else {
+          await _userService.updateProfile(updateData);
         }
-        if (_selectedRole != widget.user!.role.toLowerCase()) {
-          await _userService.changeUserRole(
-            widget.user!.id,
-            _selectedRole!.toLowerCase(),
-          );
+
+        if (mounted) {
+          showMessage(context, 'user_updated'.tr(), type: MessageType.success);
+          Navigator.pop(context, true);
         }
       } else {
-        // ✅ المستخدم العادي: يستخدم PUT /Users/profile
-        await _userService.updateProfile(updateData);
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('user_updated'.tr()),
-            backgroundColor: Colors.green,
-          ),
+        showMessage(
+          context,
+          'add_user_feature_coming'.tr(),
+          type: MessageType.info,
         );
-        Navigator.pop(context, true);
       }
-    } else {
-      // إضافة مستخدم جديد (قيد التطوير)
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('add_user_feature_coming'.tr()),
-          backgroundColor: Colors.orange,
-        ),
-      );
+    } catch (e) {
+      if (mounted) {
+        showMessage(
+          context,
+          e.toString().replaceAll('Exception: ', ''),
+          type: MessageType.error,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-  } catch (e) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceAll('Exception: ', '')),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  } finally {
-    if (mounted) setState(() => _isLoading = false);
   }
-}
+
   Future<void> _deleteUser() async {
-    // ✅ فقط الإدمن يمكنه الحذف
     if (!_isCurrentUserAdmin) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('only_admin_can_delete'.tr()),
-          backgroundColor: Colors.orange,
-        ),
+      showMessage(
+        context,
+        'only_admin_can_delete'.tr(),
+        type: MessageType.warning,
       );
       return;
     }
@@ -169,22 +152,16 @@ Future<void> _saveUser() async {
         await _userService.deleteUser(widget.user!.id);
         
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('user_deleted'.tr()),
-              backgroundColor: Colors.green,
-            ),
-          );
+          showMessage(context, 'user_deleted'.tr(), type: MessageType.success);
           Navigator.pop(context, true);
         }
       } catch (e) {
         if (mounted) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.toString().replaceAll('Exception: ', '')),
-              backgroundColor: Colors.red,
-            ),
+          showMessage(
+            context,
+            e.toString().replaceAll('Exception: ', ''),
+            type: MessageType.error,
           );
         }
       }
@@ -227,12 +204,16 @@ Future<void> _saveUser() async {
     return result ?? false;
   }
 
+  void _toggleActive() {
+    setState(() {
+      _isActive = !_isActive;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // ✅ إذا كان جاري تحميل صلاحيات المستخدم، أظهر مؤشر تحميل
     if (_isLoadingCurrentUser) {
       return Scaffold(
         backgroundColor: scheme.surface,
@@ -261,65 +242,10 @@ Future<void> _saveUser() async {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // User Avatar
-                    Center(
-                      child: Stack(
-                        children: [
-                          Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              color: scheme.primary.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: scheme.primary,
-                                width: 2,
-                              ),
-                            ),
-                            child: ClipOval(
-                              child: widget.user?.profileImageUrl != null
-                                  ? Image.network(
-                                      widget.user!.profileImageUrl!,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Icon(
-                                        Icons.person,
-                                        size: 60,
-                                        color: scheme.primary,
-                                      ),
-                                    )
-                                  : Icon(
-                                      Icons.person,
-                                      size: 60,
-                                      color: scheme.primary,
-                                    ),
-                            ),
-                          ),
-                          if (_isEditing)
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: scheme.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(Icons.edit, color: Colors.white, size: 20),
-                                  onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('feature_coming_soon'.tr())),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
+                    _buildAvatar(),
 
                     const SizedBox(height: 32),
 
-                    // Personal Info
                     SectionTitle(title: 'personal_info'.tr()),
                     const SizedBox(height: 16),
                     
@@ -338,7 +264,7 @@ Future<void> _saveUser() async {
                       icon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
                       isRequired: true,
-                      readOnly: true,  
+                      readOnly: true,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'required_field'.tr();
@@ -362,7 +288,6 @@ Future<void> _saveUser() async {
                     
                     const SizedBox(height: 16),
                     
-                    // Gender Dropdown
                     UnifiedDropdown<String>(
                       value: _genderController.text.isNotEmpty 
                           ? _genderController.text.toLowerCase() 
@@ -382,70 +307,17 @@ Future<void> _saveUser() async {
                       icon: Icons.person_outline,
                       isRequired: true,
                     ),
-                                        const SizedBox(height: 16),
+                    
+                    const SizedBox(height: 16),
 
-InkWell(
-  onTap: () async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? widget.user?.dateOfBirth ?? DateTime.now(), // ✅ يظهر التاريخ الأصلي أولاً
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
-  },
-  child: Container(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-    decoration: BoxDecoration(
-      border: Border.all(color: Colors.grey.shade300),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Row(
-      children: [
-        Icon(Icons.calendar_today, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            _selectedDate != null
-                ? DateFormat('yyyy-MM-dd').format(_selectedDate!)
-                : (widget.user?.dateOfBirth != null
-                    ? DateFormat('yyyy-MM-dd').format(widget.user!.dateOfBirth!)  // ✅ يعرض التاريخ الأصلي
-                    : 'date_of_birth'.tr()),
-            style: TextStyle(
-              color: (_selectedDate != null || widget.user?.dateOfBirth != null)
-                  ? Theme.of(context).colorScheme.onSurface
-                  : Colors.grey,
-            ),
-          ),
-        ),
-        Icon(Icons.arrow_drop_down, color: Colors.grey),
-      ],
-    ),
-  ),
-),
+                    _buildDatePicker(),
 
-                    // ✅ قسم الإدمن - يظهر فقط إذا كان المستخدم الحالي أدمن
                     if (_isCurrentUserAdmin) ...[
                       const SizedBox(height: 24),
 
                       SectionTitle(title: 'role_info'.tr()),
                       const SizedBox(height: 16),
                       
-                      // Role Dropdown
                       UnifiedDropdown<String>(
                         value: _selectedRole,
                         items: _roles.map((role) {
@@ -458,7 +330,7 @@ InkWell(
                                       ? Icons.admin_panel_settings 
                                       : Icons.person_outline,
                                   size: 18,
-                                  color: Theme.of(context).colorScheme.primary,
+                                  color: scheme.primary,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(role.tr()),
@@ -481,8 +353,7 @@ InkWell(
 
                     const SizedBox(height: 40),
 
-                    // Submit Button
-                    UnifiedFormButton(
+                    UnifiedButton.form(
                       onPressed: _saveUser,
                       text: _isEditing ? 'update_user'.tr() : 'create_user'.tr(),
                       icon: Icons.save,
@@ -490,44 +361,21 @@ InkWell(
 
                     if (_isEditing && _isCurrentUserAdmin) ...[
                       const SizedBox(height: 16),
-                                          
-                      // Enable/Disable Button
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                _isActive = !_isActive;
-                              });
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _isActive ? Colors.red : Colors.green,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
-                            child: Text(
-                              _isActive ? 'inactive'.tr() : 'active'.tr(),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
+
+                      UnifiedButton.form(
+                        onPressed: _toggleActive,
+                        text: _isActive ? 'deactivate'.tr() : 'activate'.tr(),
+                        isDestructive: _isActive,
+                        icon: _isActive ? Icons.block : Icons.check_circle,
                       ),
+
                       const SizedBox(height: 16),
-                      
-                      // Delete Button
-                      UnifiedFormButton(
+
+                      UnifiedButton.form(
                         onPressed: _deleteUser,
                         text: 'delete_user'.tr(),
-                        isOutlined: true,
                         isDestructive: true,
+                        isOutlined: true,
                         icon: Icons.delete_outline,
                       ),
                     ],
@@ -535,6 +383,127 @@ InkWell(
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildAvatar() {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Stack(
+        children: [
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: scheme.primary,
+                width: 2,
+              ),
+            ),
+            child: ClipOval(
+              child: widget.user?.profileImageUrl != null
+                  ? Image.network(
+                      widget.user!.profileImageUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Icon(
+                        Icons.person,
+                        size: 60,
+                        color: scheme.primary,
+                      ),
+                    )
+                  : Icon(
+                      Icons.person,
+                      size: 60,
+                      color: scheme.primary,
+                    ),
+            ),
+          ),
+          if (_isEditing)
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: scheme.primary,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+                  onPressed: () {
+                    showMessage(
+                      context,
+                      'feature_coming_soon'.tr(),
+                      type: MessageType.info,
+                    );
+                  },
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDatePicker() {
+    final scheme = Theme.of(context).colorScheme;
+    final displayDate = _selectedDate ?? widget.user?.dateOfBirth;
+    
+    return InkWell(
+      onTap: () async {
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: displayDate ?? DateTime.now(),
+          firstDate: DateTime(1900),
+          lastDate: DateTime.now(),
+          builder: (context, child) {
+            return Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: ColorScheme.light(
+                  primary: scheme.primary,
+                ),
+              ),
+              child: child!,
+            );
+          },
+        );
+        if (picked != null) {
+          setState(() {
+            _selectedDate = picked;
+          });
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.grey[850]
+              : Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: scheme.outlineVariant),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.calendar_today, color: scheme.primary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                displayDate != null
+                    ? DateFormat('yyyy-MM-dd').format(displayDate)
+                    : 'date_of_birth'.tr(),
+                style: TextStyle(
+                  color: displayDate != null
+                      ? scheme.onSurface
+                      : scheme.onSurface.withValues(alpha: 0.5),
+                ),
+              ),
+            ),
+            Icon(Icons.arrow_drop_down, color: scheme.onSurface.withValues(alpha: 0.5)),
+          ],
+        ),
+      ),
     );
   }
 }

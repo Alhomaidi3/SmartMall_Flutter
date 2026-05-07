@@ -5,10 +5,9 @@ import '/services/admin_service.dart';
 import '/services/user_service.dart';
 import '/services/store_service.dart';
 import 'analytics_screen.dart';
-import '/models/user.dart';  
+import '/models/user.dart';
 import 'store_form_screen.dart';
 import 'category_form_screen.dart';
-
 
 class AdminDashboardScreen extends StatefulWidget {
   final VoidCallback? onNavigateToUsers;
@@ -27,7 +26,6 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   String _selectedPeriod = 'today';
   
-  // ✅ متغيرات البيانات
   final AdminService _adminService = AdminService();
   final UserService _userService = UserService();
   final StoreService _storeService = StoreService();
@@ -35,7 +33,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   bool _isLoading = true;
   String? _error;
   
-  // ✅ إحصائيات حقيقية
   int _totalStores = 0;
   int _totalUsers = 0;
   int _totalRatings = 0;
@@ -45,10 +42,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _ratingsChange = 0;
   int _viewsChange = 0;
   
-  // ✅ الأنشطة الأخيرة
-  List<ActivityItem> _recentActivities = [];
-  
-  // ✅ بيانات المستخدم الحالي
   User? _currentUser;
 
   @override
@@ -72,95 +65,65 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         });
       }
     } catch (e) {
-      print('Error loading current user: $e');
+      debugPrint('Error loading current user: $e');
     }
   }
-Future<void> _loadDashboardData() async {
-  setState(() {
-    _isLoading = true;
-    _error = null;
-  });
 
-  try {
-    // ✅ محاولة جلب البيانات من API
-    final stats = await _adminService.getDashboardStats(period: _selectedPeriod);
-    
+  Future<void> _loadDashboardData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final stats = await _adminService.getDashboardStats(period: _selectedPeriod);
+      
+      if (mounted) {
+        setState(() {
+          _totalStores = stats['totalStores'] ?? 0;
+          _totalUsers = stats['totalUsers'] ?? 0;
+          _totalRatings = stats['totalRatings'] ?? 0;
+          _totalViews = stats['totalViews'] ?? 0;
+          _storesChange = stats['storesChange'] ?? 0;
+          _usersChange = stats['usersChange'] ?? 0;
+          _ratingsChange = stats['ratingsChange'] ?? 0;
+          _viewsChange = stats['viewsChange'] ?? 0;
+        });
+      }
+    } catch (e) {
+      debugPrint('API stats failed, using fallback data: $e');
+      await _loadFallbackData();
+    }
+
     if (mounted) {
       setState(() {
-        _totalStores = stats['totalStores'] ?? 0;
-        _totalUsers = stats['totalUsers'] ?? 0;
-        _totalRatings = stats['totalRatings'] ?? 0;
-        _totalViews = stats['totalViews'] ?? 0;
-        _storesChange = stats['storesChange'] ?? 0;
-        _usersChange = stats['usersChange'] ?? 0;
-        _ratingsChange = stats['ratingsChange'] ?? 0;
-        _viewsChange = stats['viewsChange'] ?? 0;
+        _isLoading = false;
       });
     }
-  } catch (e) {
-    // ✅ إذا فشل API، استخدم بيانات حقيقية من Services المتوفرة
-    print('API stats failed, using fallback data: $e');
-    await _loadFallbackData();
+  }
+
+  Future<void> _loadFallbackData() async {
+    try {
+      final users = await _userService.getUsers();
+      _totalUsers = users.length;
+      _usersChange = 0;
+      
+      final storesResponse = await _storeService.getAllStoresForAdmin(page: 1, pageSize: 1);
+      _totalStores = storesResponse.totalCount;
+      _storesChange = 0;
+      
+      _totalRatings = 0;
+      _totalViews = 0;
+      _ratingsChange = 0;
+      _viewsChange = 0;
+      
+      debugPrint('Fallback data loaded: Users=$_totalUsers, Stores=$_totalStores');
+    } catch (e) {
+      debugPrint('Error loading fallback data: $e');
+    }
   }
   
-  // ✅ تحميل الأنشطة (بيانات تجريبية)
-  _recentActivities = [
-    ActivityItem(
-      icon: Icons.add_business,
-      title: 'new_store_added'.tr(),
-      subtitle: 'store_added_desc'.tr(args: ['Nike Store']),
-      time: '5_min_ago'.tr(),
-      color: Colors.blue,
-    ),
-    ActivityItem(
-      icon: Icons.person_add,
-      title: 'new_user_registered'.tr(),
-      subtitle: 'user_registered_desc'.tr(args: ['Ahmed Mohamed']),
-      time: '15_min_ago'.tr(),
-      color: Colors.green,
-    ),
-    ActivityItem(
-      icon: Icons.rate_review,
-      title: 'new_review'.tr(),
-      subtitle: 'review_desc'.tr(args: ['5', 'Adidas Store']),
-      time: '1_hour_ago'.tr(),
-      color: Colors.orange,
-    ),
-  ];
-
-  if (mounted) {
-    setState(() {
-      _isLoading = false;
-    });
-  }
-}
-
-// ✅ بيانات احتياطية من الـ Services المتوفرة
-Future<void> _loadFallbackData() async {
-  try {
-    // جلب عدد المستخدمين من UserService
-    final users = await _userService.getUsers();
-    _totalUsers = users.length;
-    _usersChange = 0;  // لا يوجد بيانات للتغيير
-    
-    // جلب عدد المتاجر من StoreService
-    final storesResponse = await _storeService.getAllStoresForAdmin(page: 1, pageSize: 1);
-    _totalStores = storesResponse.totalCount;
-    _storesChange = 0;
-    
-    // قيم افتراضية للتقييمات والمشاهدات
-    _totalRatings = 0;
-    _totalViews = 0;
-    _ratingsChange = 0;
-    _viewsChange = 0;
-    
-    print('Fallback data loaded: Users=$_totalUsers, Stores=$_totalStores');
-  } catch (e) {
-    print('Error loading fallback data: $e');
-  }
-}
-  
-   @override
+  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -174,15 +137,13 @@ Future<void> _loadFallbackData() async {
         leadingWidget: Container(
           margin: const EdgeInsets.only(left: 8),
           decoration: BoxDecoration(
-            color: scheme.primary.withOpacity(0.1),
+            color: scheme.primary.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: IconButton(
             icon: const Icon(Icons.notifications_outlined),
             color: scheme.primary,
-            onPressed: () {
-              // TODO: فتح صفحة الإشعارات
-            },
+            onPressed: () {},
           ),
         ),
       ),
@@ -227,31 +188,6 @@ Future<void> _loadFallbackData() async {
                         ),
                         const SizedBox(height: 16),
                         _buildQuickActionsGrid(),
-                        const SizedBox(height: 32),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'recent_activities'.tr(),
-                              style: textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: scheme.onSurface,
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                // TODO: عرض كل الأنشطة
-                              },
-                              child: Text(
-                                'view_all'.tr(),
-                                style: TextStyle(color: scheme.primary),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        _buildRecentActivities(),
-                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -267,14 +203,14 @@ Future<void> _loadFallbackData() async {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [scheme.primary, scheme.primary.withOpacity(0.8)],
+          colors: [scheme.primary, scheme.primary.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: scheme.primary.withOpacity(0.3),
+            color: scheme.primary.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -305,7 +241,7 @@ Future<void> _loadFallbackData() async {
                 Text(
                   'admin_dashboard_desc'.tr(),
                   style: textTheme.bodyMedium?.copyWith(
-                    color: scheme.onPrimary.withOpacity(0.9),
+                    color: scheme.onPrimary.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -314,7 +250,7 @@ Future<void> _loadFallbackData() async {
           const SizedBox(width: 16),
           CircleAvatar(
             radius: 40,
-            backgroundColor: scheme.onPrimary.withOpacity(0.2),
+            backgroundColor: scheme.onPrimary.withValues(alpha: 0.2),
             child: Icon(
               Icons.admin_panel_settings,
               size: 40,
@@ -327,12 +263,12 @@ Future<void> _loadFallbackData() async {
   }
 
   Widget _buildPeriodFilter() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: (Theme.of(context).brightness == Brightness.dark
-            ? Colors.grey[800]
-            : Colors.grey[200]),
+        color: isDark ? Colors.grey[800] : Colors.grey[200],
         borderRadius: BorderRadius.circular(30),
       ),
       child: Row(
@@ -349,7 +285,7 @@ Future<void> _loadFallbackData() async {
 
   Widget _buildFilterChip(String label, String value) {
     final scheme = Theme.of(context).colorScheme;
-    final isSelected = _selectedPeriod == value;
+    final bool isSelected = _selectedPeriod == value;
 
     return GestureDetector(
       onTap: () {
@@ -424,8 +360,8 @@ Future<void> _loadFallbackData() async {
     required Color color,
   }) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isPositive = change.startsWith('+');
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isPositive = change.startsWith('+');
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -434,7 +370,7 @@ Future<void> _loadFallbackData() async {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -450,7 +386,7 @@ Future<void> _loadFallbackData() async {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: color, size: 20),
@@ -459,7 +395,7 @@ Future<void> _loadFallbackData() async {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: (isPositive ? Colors.green : Colors.red).withOpacity(0.1),
+                    color: (isPositive ? Colors.green : Colors.red).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -484,7 +420,7 @@ Future<void> _loadFallbackData() async {
           Text(
             title,
             style: TextStyle(
-              color: scheme.onSurface.withOpacity(0.7),
+              color: scheme.onSurface.withValues(alpha: 0.7),
               fontSize: 13,
             ),
           ),
@@ -493,226 +429,115 @@ Future<void> _loadFallbackData() async {
     );
   }
 
+  Widget _buildQuickAction({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-Widget _buildQuickAction({
-  required IconData icon,
-  required String label,
-  required Color color,
-  required VoidCallback onTap,
-}) {
-  final scheme = Theme.of(context).colorScheme;
-  final isDark = Theme.of(context).brightness == Brightness.dark;
-
-  return InkWell(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(16),
-    child: Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[850] : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: scheme.onSurface,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    ),
-  );
-}
-Widget _buildQuickActionsGrid() {
-  final scheme = Theme.of(context).colorScheme;
-
-  return GridView.count(
-    shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
-    crossAxisCount: 4,
-    mainAxisSpacing: 16,
-    crossAxisSpacing: 16,
-    childAspectRatio: 0.9,
-    children: [
-      _buildQuickAction(
-        icon: Icons.add_business_outlined,
-        label: 'add_store'.tr(),
-        color: scheme.primary,
-        onTap: () {
-          // ✅ نفس أسلوب StoreDetailsScreen
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const StoreFormScreen(),  // شاشة إضافة متجر
-            ),
-          );
-      }
-    ),
-      _buildQuickAction(
-        icon: Icons.add_box,  
-        label: 'add_category'.tr(),          
-        color: Colors.green,
-        onTap: () {
-          // ✅ فتح شاشة إضافة فئة جديدة
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const CategoryFormScreen(),  // شاشة إضافة فئة
-            ),
-          );
-        },
-      ),      _buildQuickAction(
-        icon: Icons.analytics_outlined,
-        label: 'analytics'.tr(),
-        color: Colors.orange,
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AdminAnalyticsScreen()),
-          );
-        },
-      ),
-      _buildQuickAction(
-        icon: Icons.people_outline,
-        label: 'users'.tr(),
-        color: Colors.blue,
-        onTap: () {
-          if (widget.onNavigateToUsers != null) {
-            widget.onNavigateToUsers!();
-          }
-        },
-      ),
-    ],
-  );
-}
-
-  Widget _buildRecentActivities() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    if (_recentActivities.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(32),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: isDark ? Colors.grey[850] : Colors.white,
           borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        child: Center(
-          child: Text(
-            'no_activities'.tr(),
-            style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: scheme.onSurface,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
-      );
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[850] : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: _recentActivities.asMap().entries.map((entry) {
-          final index = entry.key;
-          final activity = entry.value;
-          return Column(
-            children: [
-              _buildActivityItem(activity),
-              if (index < _recentActivities.length - 1) _buildDivider(),
-            ],
-          );
-        }).toList(),
       ),
     );
   }
 
-  Widget _buildActivityItem(ActivityItem activity) {
+  Widget _buildQuickActionsGrid() {
     final scheme = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: activity.color.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(activity.icon, color: activity.color, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  activity.title,
-                  style: TextStyle(
-                    color: scheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  activity.subtitle,
-                  style: TextStyle(
-                    color: scheme.onSurface.withOpacity(0.7),
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            activity.time,
-            style: TextStyle(
-              color: scheme.onSurface.withOpacity(0.5),
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDivider() {
-    final scheme = Theme.of(context).colorScheme;
-    return Divider(
-      height: 1,
-      indent: 16,
-      endIndent: 16,
-      color: scheme.outlineVariant,
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 4,
+      mainAxisSpacing: 16,
+      crossAxisSpacing: 16,
+      childAspectRatio: 0.9,
+      children: [
+        _buildQuickAction(
+          icon: Icons.add_business_outlined,
+          label: 'add_store'.tr(),
+          color: scheme.primary,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const StoreFormScreen()),
+            );
+          },
+        ),
+        _buildQuickAction(
+          icon: Icons.add_box,
+          label: 'add_category'.tr(),
+          color: Colors.green,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CategoryFormScreen()),
+            );
+          },
+        ),
+        _buildQuickAction(
+          icon: Icons.analytics_outlined,
+          label: 'analytics'.tr(),
+          color: Colors.orange,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminAnalyticsScreen()),
+            );
+          },
+        ),
+        _buildQuickAction(
+          icon: Icons.people_outline,
+          label: 'users'.tr(),
+          color: Colors.blue,
+          onTap: () {
+            if (widget.onNavigateToUsers != null) {
+              widget.onNavigateToUsers!();
+            }
+          },
+        ),
+      ],
     );
   }
 
@@ -730,21 +555,4 @@ Widget _buildQuickActionsGrid() {
     if (change < 0) return change.toString();
     return '0';
   }
-}
-
-// ✅ موديل النشاط
-class ActivityItem {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String time;
-  final Color color;
-
-  ActivityItem({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.time,
-    required this.color,
-  });
 }

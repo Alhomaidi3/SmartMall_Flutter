@@ -48,25 +48,22 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   Future<void> _removeFavorite(int storeId) async {
     try {
-      // TODO: استدعاء حذف المفضلة
-      // await _favoriteService.removeFavorite(storeId);
-      await _loadFavorites(); // تحديث القائمة
+
+      await _loadFavorites(); // Refresh list
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تمت الإزالة من المفضلة'),
-            backgroundColor: Colors.green,
-          ),
+        showMessage(
+          context,
+          'removed_from_favorites'.tr(),
+          type: MessageType.success,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-            backgroundColor: Colors.red,
-          ),
+        showMessage(
+          context,
+          e.toString().replaceAll('Exception: ', ''),
+          type: MessageType.error,
         );
       }
     }
@@ -74,7 +71,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -111,12 +108,17 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                           const SizedBox(height: 16),
                           Text(
                             'no_favorites'.tr(),
-                            style: const TextStyle(fontSize: 18),
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: scheme.onSurface,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'add_favorites_hint'.tr(),
-                            style: TextStyle(color: Colors.grey[600]),
+                            style: TextStyle(
+                              color: scheme.onSurface.withValues(alpha: 0.6),
+                            ),
                           ),
                         ],
                       ),
@@ -128,37 +130,60 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         itemCount: _favorites.length,
                         itemBuilder: (context, index) {
                           final store = _favorites[index];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            color: isDark ? Colors.grey[850] : Colors.grey[100],
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.orange.withOpacity(0.2),
-                                child: Icon(
-                                  Icons.store,
-                                  color: Colors.orange,
-                                ),
-                              ),
-                              title: Text(
-                                store['nameAr'] ?? store['nameEn'] ?? 'Store',
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Text(store['descriptionAr'] ?? ''),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.favorite, color: Colors.red),
-                                onPressed: () => _removeFavorite(store['storeId']),
-                              ),
-                              onTap: () {
-                                // TODO: الذهاب لصفحة تفاصيل المتجر
-                              },
-                            ),
-                          );
+                          return _buildFavoriteCard(store, isDark, scheme);
                         },
                       ),
                     ),
+    );
+  }
+
+  Widget _buildFavoriteCard(dynamic store, bool isDark, ColorScheme scheme) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[850] : Colors.grey[100],
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(12),
+        leading: CircleAvatar(
+          radius: 28,
+          backgroundColor: Colors.orange.withValues(alpha: 0.2),
+          child: Icon(
+            Icons.store,
+            color: Colors.orange,
+            size: 28,
+          ),
+        ),
+        title: Text(
+          store['nameAr'] ?? store['nameEn'] ?? 'Store',
+          style: TextStyle(
+            color: scheme.onSurface,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        subtitle: Text(
+          store['descriptionAr'] ?? '',
+          style: TextStyle(
+            color: scheme.onSurface.withValues(alpha: 0.7),
+            fontSize: 13,
+          ),
+        ),
+        trailing: IconButton(
+          icon: const Icon(Icons.favorite, color: Colors.red),
+          onPressed: () => _removeFavorite(store['storeId']),
+        ),
+        onTap: () {
+        },
+      ),
     );
   }
 }

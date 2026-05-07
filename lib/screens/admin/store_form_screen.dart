@@ -28,7 +28,6 @@ class _StoreFormScreenState extends State<StoreFormScreen> {
   late TextEditingController _floorController;
   
   int? _selectedCategoryId;
-  String? _selectedCategoryName;
   bool _isActive = true;
   bool _isEditing = false;
   bool _isLoading = false;
@@ -56,7 +55,6 @@ class _StoreFormScreenState extends State<StoreFormScreen> {
     _selectedCategoryId = widget.store?.categoryId;
     _isActive = widget.store?.isActive ?? true;
     
-    // استخدام addPostFrameCallback لتأخير تحميل التصنيفات
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadCategories();
     });
@@ -91,18 +89,10 @@ class _StoreFormScreenState extends State<StoreFormScreen> {
         setState(() {
           _categories = categories;
           _isLoadingCategories = false;
-          
-          if (_selectedCategoryId != null && _categories.isNotEmpty) {
-            final selectedCat = _categories.firstWhere(
-              (c) => c.id == _selectedCategoryId,
-              orElse: () => _categories.first,
-            );
-            _selectedCategoryName = selectedCat.getName(context.locale.languageCode);
-          }
         });
       }
     } catch (e) {
-      print('Error loading categories: $e');
+      debugPrint('Error loading categories: $e');
       if (mounted) {
         setState(() {
           _isLoadingCategories = false;
@@ -124,7 +114,6 @@ class _StoreFormScreenState extends State<StoreFormScreen> {
     
     try {
       if (_isEditing) {
-        // تحديث متجر موجود
         final updateDto = StoreUpdateDto(
           nameAr: _nameArController.text.trim(),
           nameEn: _nameEnController.text.trim(),
@@ -150,7 +139,6 @@ class _StoreFormScreenState extends State<StoreFormScreen> {
           Navigator.pop(context, true);
         }
       } else {
-        // إنشاء متجر جديد
         final createDto = StoreCreateDto(
           nameAr: _nameArController.text.trim(),
           nameEn: _nameEnController.text.trim(),
@@ -249,17 +237,51 @@ class _StoreFormScreenState extends State<StoreFormScreen> {
     }
   }
 
+  void _toggleActive() async {
+    if (!_isEditing) return;
+    
+    setState(() => _isLoading = true);
+    
+    try {
+      await _storeService.updateStore(
+        widget.store!.id,
+        StoreUpdateDto(
+          isActive: !_isActive,
+        ),
+      );
+      
+      if (mounted) {
+        setState(() {
+          _isActive = !_isActive;
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_isActive ? 'store_activated'.tr() : 'store_deactivated'.tr()),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _pickImage() {
-    // TODO: Implement image picker
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('feature_coming_soon'.tr())),
-    );
+    showMessage(context, 'feature_coming_soon'.tr(), type: MessageType.info);
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: scheme.surface,
@@ -277,69 +299,23 @@ class _StoreFormScreenState extends State<StoreFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Image Preview
-                    Center(
-                      child: Stack(
-                        children: [
-                          Container(
-                            width: 150,
-                            height: 150,
-                            decoration: BoxDecoration(
-                              color: isDark ? Colors.grey[800] : Colors.grey[200],
-                              borderRadius: BorderRadius.circular(20),
-                              image: _imageController.text.isNotEmpty
-                                  ? DecorationImage(
-                                      image: NetworkImage(_imageController.text),
-                                      fit: BoxFit.cover,
-                                    )
-                                  : null,
-                            ),
-                            child: _imageController.text.isEmpty
-                                ? Icon(
-                                    Icons.store,
-                                    size: 50,
-                                    color: scheme.onSurface.withOpacity(0.3),
-                                  )
-                                : null,
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: scheme.primary,
-                                shape: BoxShape.circle,
-                              ),
-                              child: IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.white, size: 20),
-                                onPressed: _pickImage,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _buildImagePreview(),
 
                     const SizedBox(height: 32),
-                    // Arabic Fields
-                    _buildSectionTitle(context, 'arabic_info'.tr()),
+
+                    SectionTitle(title: 'arabic_info'.tr()),
                     const SizedBox(height: 16),
                     
-                    _buildTextField(
+                    UnifiedTextField(
                       controller: _nameArController,
                       label: 'store_name_ar'.tr(),
                       icon: Icons.text_fields,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'required_field'.tr();
-                        }
-                        return null;
-                      },
+                      isRequired: true,
                     ),
                     
                     const SizedBox(height: 16),
                     
-                    _buildTextField(
+                    UnifiedTextField(
                       controller: _descArController,
                       label: 'description_ar'.tr(),
                       icon: Icons.description,
@@ -348,25 +324,19 @@ class _StoreFormScreenState extends State<StoreFormScreen> {
 
                     const SizedBox(height: 24),
 
-                    // English Fields
-                    _buildSectionTitle(context, 'english_info'.tr()),
+                    SectionTitle(title: 'english_info'.tr()),
                     const SizedBox(height: 16),
                     
-                    _buildTextField(
+                    UnifiedTextField(
                       controller: _nameEnController,
                       label: 'store_name_en'.tr(),
                       icon: Icons.text_fields,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'required_field'.tr();
-                        }
-                        return null;
-                      },
+                      isRequired: true,
                     ),
                     
                     const SizedBox(height: 16),
                     
-                    _buildTextField(
+                    UnifiedTextField(
                       controller: _descEnController,
                       label: 'description_en'.tr(),
                       icon: Icons.description,
@@ -375,71 +345,35 @@ class _StoreFormScreenState extends State<StoreFormScreen> {
 
                     const SizedBox(height: 24),
 
-                    // Category Dropdown
-                    _buildSectionTitle(context, 'category'.tr()),
+                    SectionTitle(title: 'category'.tr()),
                     const SizedBox(height: 16),
                     
                     _isLoadingCategories
                         ? const Center(child: CircularProgressIndicator())
-                        : Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: isDark ? Colors.grey[850] : Colors.grey[100],
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: scheme.outlineVariant,
-                              ),
-                            ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButtonFormField<int>(
-                                value: _selectedCategoryId,
-                                decoration: InputDecoration(
-                                  labelText: 'category'.tr(),
-                                  prefixIcon: Icon(Icons.category_outlined, color: scheme.primary),
-                                  filled: true,
-                                  fillColor: isDark ? Colors.grey[850] : Colors.grey[100],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: scheme.outlineVariant),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: scheme.primary, width: 2),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                                ),
-                                items: _categories.map((category) {
-                                  return DropdownMenuItem<int>(
-                                    value: category.id,
-                                    child: Text(category.getName(context.locale.languageCode)),
-                                  );
-                                }).toList(),
-                                onChanged: (int? value) {
-                                  setState(() {
-                                    _selectedCategoryId = value;
-                                  });
-                                },
-                                validator: (value) {
-                                  if (value == null) {
-                                    return 'required_field'.tr();
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
+                        : UnifiedDropdown<int>(
+                            value: _selectedCategoryId,
+                            items: _categories.map((category) {
+                              return DropdownMenuItem<int>(
+                                value: category.id,
+                                child: Text(category.getName(context.locale.languageCode)),
+                              );
+                            }).toList(),
+                            onChanged: (int? value) {
+                              setState(() {
+                                _selectedCategoryId = value;
+                              });
+                            },
+                            label: 'category'.tr(),
+                            icon: Icons.category_outlined,
+                            isRequired: true,
                           ),
 
                     const SizedBox(height: 24),
 
-                    // Contact Info
-                    _buildSectionTitle(context, 'contact_info'.tr()),
+                    SectionTitle(title: 'contact_info'.tr()),
                     const SizedBox(height: 16),
                     
-                    _buildTextField(
+                    UnifiedTextField(
                       controller: _phoneController,
                       label: 'phone_number'.tr(),
                       icon: Icons.phone,
@@ -448,7 +382,7 @@ class _StoreFormScreenState extends State<StoreFormScreen> {
                     
                     const SizedBox(height: 16),
                     
-                    _buildTextField(
+                    UnifiedTextField(
                       controller: _websiteController,
                       label: 'website'.tr(),
                       icon: Icons.language,
@@ -457,15 +391,15 @@ class _StoreFormScreenState extends State<StoreFormScreen> {
 
                     const SizedBox(height: 24),
 
-                    // Location Info
-                    _buildSectionTitle(context, 'location_info'.tr()),
+                    SectionTitle(title: 'location_info'.tr()),
                     const SizedBox(height: 16),
                     
-                    _buildTextField(
+                    UnifiedTextField(
                       controller: _floorController,
                       label: 'floor'.tr(),
                       icon: Icons.layers,
                       keyboardType: TextInputType.number,
+                      isRequired: true,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'required_field'.tr();
@@ -479,7 +413,7 @@ class _StoreFormScreenState extends State<StoreFormScreen> {
                     
                     const SizedBox(height: 16),
                     
-                    _buildTextField(
+                    UnifiedTextField(
                       controller: _imageController,
                       label: 'image_url'.tr(),
                       icon: Icons.image,
@@ -488,81 +422,30 @@ class _StoreFormScreenState extends State<StoreFormScreen> {
 
                     const SizedBox(height: 40),
 
-                    // Submit Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 55,
-                      child: ElevatedButton(
-                        onPressed: _saveStore,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: scheme.primary,
-                          foregroundColor: scheme.onPrimary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          elevation: 4,
-                        ),
-                        child: Text(
-                          _isEditing ? 'update_store'.tr() : 'create_store'.tr(),
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                    UnifiedButton.form(
+                      onPressed: _saveStore,
+                      text: _isEditing ? 'update_store'.tr() : 'create_store'.tr(),
+                      icon: Icons.save,
                     ),
 
                     if (_isEditing) ...[
                       const SizedBox(height: 16),
-                    if (_isEditing)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                _isActive = !_isActive; 
-                              });
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: !(_isActive) ? Colors.green : Colors.red,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
-                            child: Text(
-                              !(_isActive) ? 'active'.tr() : 'inactive'.tr(),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
+
+                      UnifiedButton.form(
+                        onPressed: _toggleActive,
+                        text: _isActive ? 'deactivate'.tr() : 'activate'.tr(),
+                        isDestructive: _isActive,
+                        icon: _isActive ? Icons.block : Icons.check_circle,
                       ),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 55,
-                        child: OutlinedButton(
-                          onPressed: _deleteStore,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red,
-                            side: const BorderSide(color: Colors.red),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: Text(
-                            'delete_store'.tr(),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+
+                      const SizedBox(height: 16),
+
+                      UnifiedButton.form(
+                        onPressed: _deleteStore,
+                        text: 'delete_store'.tr(),
+                        isDestructive: true,
+                        isOutlined: true,
+                        icon: Icons.delete_outline,
                       ),
                     ],
                   ],
@@ -572,69 +455,50 @@ class _StoreFormScreenState extends State<StoreFormScreen> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
+  Widget _buildImagePreview() {
     final scheme = Theme.of(context).colorScheme;
-    
-    return Row(
-      children: [
-        Container(
-          width: 4,
-          height: 24,
-          decoration: BoxDecoration(
-            color: scheme.primary,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: TextStyle(
-            color: scheme.onSurface,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    TextInputType? keyboardType,
-    int maxLines = 1,
-    String? Function(String?)? validator,
-  }) {
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      style: TextStyle(color: scheme.onSurface),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: scheme.onSurface.withOpacity(0.7)),
-        prefixIcon: Icon(icon, color: scheme.primary, size: 22),
-        filled: true,
-        fillColor: isDark ? Colors.grey[850] : Colors.grey[100],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: scheme.outlineVariant),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: scheme.primary, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    return Center(
+      child: Stack(
+        children: [
+          Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.grey[800] : Colors.grey[200],
+              borderRadius: BorderRadius.circular(20),
+              image: _imageController.text.isNotEmpty
+                  ? DecorationImage(
+                      image: NetworkImage(_imageController.text),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            child: _imageController.text.isEmpty
+                ? Icon(
+                    Icons.store,
+                    size: 50,
+                    color: scheme.onSurface.withValues(alpha: 0.3),
+                  )
+                : null,
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                color: scheme.primary,
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+                onPressed: _pickImage,
+              ),
+            ),
+          ),
+        ],
       ),
-      validator: validator,
     );
   }
 }

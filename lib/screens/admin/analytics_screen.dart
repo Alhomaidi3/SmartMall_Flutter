@@ -10,8 +10,8 @@ class AdminAnalyticsScreen extends StatefulWidget {
 }
 
 class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
-  String _selectedPeriod = 'week'; // today, week, month, year
-  String _selectedChartType = 'visits'; // visits, users, stores, reviews
+  String _selectedPeriod = 'week';
+  String _selectedChartType = 'visits';
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
           Container(
             margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
-              color: scheme.primary.withOpacity(0.1),
+              color: scheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: IconButton(
@@ -39,14 +39,12 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
         leadingWidget: Container(
           margin: const EdgeInsets.only(left: 8),
           decoration: BoxDecoration(
-            color: scheme.primary.withOpacity(0.1),
+            color: scheme.primary.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: IconButton(
             icon: Icon(Icons.notifications_outlined, color: scheme.primary),
-            onPressed: () {
-              // TODO: فتح صفحة الإشعارات
-            },
+            onPressed: () {},
           ),
         ),
       ),
@@ -84,9 +82,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {
-                    // تصدير التقرير
-                  },
+                  onPressed: () {},
                   child: Row(
                     children: [
                       Icon(Icons.download_outlined, size: 18, color: scheme.primary),
@@ -110,19 +106,18 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   }
 
   Widget _buildHeader() {
-    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.purple, Colors.purple.withOpacity(0.8)],
+          colors: [Colors.purple, Colors.purple.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.withOpacity(0.3),
+            color: Colors.purple.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -146,7 +141,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                 Text(
                   'analytics_description'.tr(),
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 14,
                   ),
                 ),
@@ -154,7 +149,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: Text(
@@ -168,7 +163,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
           const SizedBox(width: 16),
           CircleAvatar(
             radius: 40,
-            backgroundColor: Colors.white.withOpacity(0.2),
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
             child: const Icon(Icons.analytics, size: 40, color: Colors.white),
           ),
         ],
@@ -177,12 +172,12 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   }
 
   Widget _buildPeriodFilter() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark 
-            ? Colors.grey[800] 
-            : Colors.grey[200],
+        color: isDark ? Colors.grey[800] : Colors.grey[200],
         borderRadius: BorderRadius.circular(30),
       ),
       child: Row(
@@ -199,7 +194,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
 
   Widget _buildPeriodChip(String label, String value) {
     final scheme = Theme.of(context).colorScheme;
-    final isSelected = _selectedPeriod == value;
+    final bool isSelected = _selectedPeriod == value;
     
     return GestureDetector(
       onTap: () => setState(() => _selectedPeriod = value),
@@ -236,13 +231,13 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
 
   Widget _buildTypeChip(IconData icon, String value, String label) {
     final scheme = Theme.of(context).colorScheme;
-    final isSelected = _selectedChartType == value;
+    final bool isSelected = _selectedChartType == value;
     
     return FilterChip(
       avatar: Icon(
         icon,
         size: 16,
-        color: isSelected ? scheme.primary : scheme.onSurface.withOpacity(0.5),
+        color: isSelected ? scheme.primary : scheme.onSurface.withValues(alpha: 0.5),
       ),
       label: Text(label),
       selected: isSelected,
@@ -250,7 +245,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
       backgroundColor: Theme.of(context).brightness == Brightness.dark
           ? Colors.grey[800]
           : Colors.grey[200],
-      selectedColor: scheme.primary.withOpacity(0.1),
+      selectedColor: scheme.primary.withValues(alpha: 0.1),
       labelStyle: TextStyle(
         color: isSelected ? scheme.primary : scheme.onSurface,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -265,7 +260,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
 
   Widget _buildMainChart() {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final List<Map<String, dynamic>> chartData = _getChartData();
     
     return Container(
@@ -275,7 +270,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -298,7 +293,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: scheme.primary.withOpacity(0.1),
+                  color: scheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -328,7 +323,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: List.generate(chartData.length, (index) {
                 final data = chartData[index];
-                final height = data['value'] * 1.5;
+                final double height = (data['value'] as int) * 1.5;
                 return Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -340,16 +335,16 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                           gradient: LinearGradient(
                             begin: Alignment.bottomCenter,
                             end: Alignment.topCenter,
-                            colors: [scheme.primary.withOpacity(0.3), scheme.primary],
+                            colors: [scheme.primary.withValues(alpha: 0.3), scheme.primary],
                           ),
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        data['label'],
+                        data['label'] as String,
                         style: TextStyle(
-                          color: scheme.onSurface.withOpacity(0.7),
+                          color: scheme.onSurface.withValues(alpha: 0.7),
                           fontSize: 11,
                         ),
                       ),
@@ -363,7 +358,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: scheme.primary.withOpacity(0.05),
+              color: scheme.primary.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
@@ -375,7 +370,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                     Text(
                       'total_for_period'.tr(),
                       style: TextStyle(
-                        color: scheme.onSurface.withOpacity(0.7),
+                        color: scheme.onSurface.withValues(alpha: 0.7),
                         fontSize: 13,
                       ),
                     ),
@@ -393,7 +388,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: scheme.primary.withOpacity(0.1),
+                    color: scheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(_getChartIcon(), color: scheme.primary, size: 24),
@@ -474,15 +469,15 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
     
     switch (_selectedChartType) {
       case 'visits':
-        return '$total ' + 'visits'.tr();
+        return '$total ${'visits'.tr()}';
       case 'users':
-        return '$total ' + 'users'.tr();
+        return '$total ${'users'.tr()}';
       case 'stores':
-        return '$total ' + 'stores'.tr();
+        return '$total ${'stores'.tr()}';
       case 'reviews':
-        return '$total ' + 'reviews'.tr();
+        return '$total ${'reviews'.tr()}';
       default:
-        return '$total';
+        return total.toString();
     }
   }
 
@@ -550,7 +545,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
     required Color color,
   }) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -559,7 +554,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -575,7 +570,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: color, size: 20),
@@ -583,7 +578,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: (change.startsWith('+') ? Colors.green : Colors.red).withOpacity(0.1),
+                  color: (change.startsWith('+') ? Colors.green : Colors.red).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -608,7 +603,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
           Text(
             title,
             style: TextStyle(
-              color: scheme.onSurface.withOpacity(0.7),
+              color: scheme.onSurface.withValues(alpha: 0.7),
               fontSize: 13,
             ),
           ),
@@ -618,7 +613,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   }
 
   Widget _buildDetailedAnalysis() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Container(
       decoration: BoxDecoration(
@@ -626,7 +621,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -686,7 +681,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 20),
@@ -707,7 +702,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                 Text(
                   subtitle,
                   style: TextStyle(
-                    color: scheme.onSurface.withOpacity(0.7),
+                    color: scheme.onSurface.withValues(alpha: 0.7),
                     fontSize: 13,
                   ),
                 ),
@@ -717,7 +712,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -746,7 +741,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
 
   void _showFilterDialog(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     
     showModalBottomSheet(
       context: context,
@@ -785,7 +780,6 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
               trailing: Icon(Icons.chevron_right, color: scheme.onSurface),
               onTap: () {
                 Navigator.pop(context);
-                // TODO: فتح منتقي التاريخ
               },
             ),
             ListTile(
@@ -794,7 +788,6 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
               trailing: Icon(Icons.chevron_right, color: scheme.onSurface),
               onTap: () {
                 Navigator.pop(context);
-                // TODO: فتح خيارات المقارنة
               },
             ),
             ListTile(
@@ -803,7 +796,6 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
               trailing: Icon(Icons.chevron_right, color: scheme.onSurface),
               onTap: () {
                 Navigator.pop(context);
-                // TODO: تصدير البيانات
               },
             ),
           ],

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-
 import 'screens/user/login_screen.dart';
 import 'screens/user/signup_screen.dart';
 import 'screens/user/onboarding_screen.dart';
-import 'widgets/user_bottom_navigation_bar.dart';              // ✅ تصحيح المسار
+import 'widgets/user_bottom_navigation_bar.dart';  
 import 'widgets/admin_bottom_navigation_bar.dart';
 
 void main() async {
@@ -46,7 +45,6 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       title: 'Smart Mall Guide',
 
-      /// 🎨 Light Theme
       theme: ThemeData(
         brightness: Brightness.light,
         colorScheme: const ColorScheme.light(
@@ -72,7 +70,6 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
 
-      /// 🌙 Dark Theme
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         colorScheme: const ColorScheme.dark(
@@ -100,7 +97,6 @@ class _MyAppState extends State<MyApp> {
 
       themeMode: _themeMode,
 
-      /// ✅ EasyLocalization
       locale: context.locale,
       supportedLocales: context.supportedLocales,
       localizationsDelegates: context.localizationDelegates,
@@ -127,7 +123,7 @@ class _MyAppState extends State<MyApp> {
           case '/admin':
             return MaterialPageRoute(
               builder: (_) => AdminMainScreen(
-                onThemeChanged: _toggleTheme,  // ✅ تمرر الدالة
+                onThemeChanged: _toggleTheme,
               ),
             );
           

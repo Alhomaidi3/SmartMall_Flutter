@@ -29,10 +29,11 @@ class _StoresManagementScreenState extends State<StoresManagementScreen> {
   
   final StoreService _storeService = StoreService();
   final CategoryService _categoryService = CategoryService();
-  final List<FilterChipData> statusFilters = [
-    const FilterChipData(value: 'all', labelKey: 'all_stores', icon: Icons.store_outlined),
-    const FilterChipData(value: 'active', labelKey: 'active', icon: Icons.check_circle_outline, selectedColor: Colors.green),
-    const FilterChipData(value: 'inactive', labelKey: 'inactive', icon: Icons.remove_circle_outline, selectedColor: Colors.red),
+  
+  final List<FilterChipData> statusFilters = const [
+    FilterChipData(value: 'all', labelKey: 'all_stores', icon: Icons.store_outlined),
+    FilterChipData(value: 'active', labelKey: 'active', icon: Icons.check_circle_outline, selectedColor: Colors.green),
+    FilterChipData(value: 'inactive', labelKey: 'inactive', icon: Icons.remove_circle_outline, selectedColor: Colors.red),
   ];
 
   @override
@@ -67,13 +68,12 @@ class _StoresManagementScreenState extends State<StoresManagementScreen> {
         });
       }
     } catch (e) {
-      print('Error loading categories: $e');
+      debugPrint('Error loading categories: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-            backgroundColor: Colors.red,
-          ),
+        showMessage(
+          context,
+          e.toString().replaceAll('Exception: ', ''),
+          type: MessageType.error,
         );
       }
     }
@@ -115,11 +115,10 @@ class _StoresManagementScreenState extends State<StoresManagementScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-            backgroundColor: Colors.red,
-          ),
+        showMessage(
+          context,
+          e.toString().replaceAll('Exception: ', ''),
+          type: MessageType.error,
         );
       }
     }
@@ -156,11 +155,10 @@ class _StoresManagementScreenState extends State<StoresManagementScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-            backgroundColor: Colors.red,
-          ),
+        showMessage(
+          context,
+          e.toString().replaceAll('Exception: ', ''),
+          type: MessageType.error,
         );
       }
     }
@@ -179,7 +177,7 @@ class _StoresManagementScreenState extends State<StoresManagementScreen> {
   }
 
   List<FilterChipData> get categoryFilters {
-    final filters = [
+    return [
       const FilterChipData(
         value: 'all',
         labelKey: 'all_categories',
@@ -192,7 +190,6 @@ class _StoresManagementScreenState extends State<StoresManagementScreen> {
         selectedColor: Theme.of(context).colorScheme.primary,
       )),
     ];
-    return filters;
   }
 
   Future<void> _deleteStore(StoreDto store) async {
@@ -234,22 +231,16 @@ class _StoresManagementScreenState extends State<StoresManagementScreen> {
       try {
         await _storeService.deleteStore(store.id);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('store_deleted'.tr()),
-              backgroundColor: Colors.green,
-            ),
-          );
+          showMessage(context, 'store_deleted'.tr(), type: MessageType.success);
           await _fetchStores(refresh: true);
         }
       } catch (e) {
         if (mounted) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.toString().replaceAll('Exception: ', '')),
-              backgroundColor: Colors.red,
-            ),
+          showMessage(
+            context,
+            e.toString().replaceAll('Exception: ', ''),
+            type: MessageType.error,
           );
         }
       }
@@ -259,7 +250,6 @@ class _StoresManagementScreenState extends State<StoresManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final locale = context.locale.languageCode;
 
     return Scaffold(
       backgroundColor: scheme.surface,
@@ -270,21 +260,18 @@ class _StoresManagementScreenState extends State<StoresManagementScreen> {
         leadingWidget: Container(
           margin: const EdgeInsets.only(left: 8),
           decoration: BoxDecoration(
-            color: scheme.primary.withOpacity(0.1),
+            color: scheme.primary.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: IconButton(
             icon: const Icon(Icons.notifications_outlined),
             color: scheme.primary,
-            onPressed: () {
-              // TODO: فتح صفحة الإشعارات
-            },
+            onPressed: () {},
           ),
         ),
       ),
       body: Column(
         children: [
-          // Search Bar
           Padding(
             padding: const EdgeInsets.all(16),
             child: CustomSearchBar(
@@ -297,7 +284,6 @@ class _StoresManagementScreenState extends State<StoresManagementScreen> {
             ),
           ),
           
-          // Stats Row with Add Button
           UnifiedStatsRow(
             icon: Icons.store,
             title: 'total_stores'.tr(),
@@ -315,113 +301,113 @@ class _StoresManagementScreenState extends State<StoresManagementScreen> {
             },
             addButtonText: 'add_store'.tr(),
           ),
-          // Scrollable Content
-Expanded(
-    child: Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8), 
-  child: ClipRRect(
-    borderRadius: BorderRadius.circular(20), 
-    child: Container(
-    color: Theme.of(context).colorScheme.surfaceContainerHighest, 
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Status Filter Chips
-            if (statusFilters.isNotEmpty)
-              FilterChipsRow(
-                filters: statusFilters,
-                selectedStatus: selectedStatus,
-                onSingleSelected: (value) {
-                  setState(() {
-                    selectedStatus = value;
-                    if (value == 'all') selectedCategory = 'all';
-                    _fetchStores(refresh: true);
-                  });
-                },
-              ),
-            // Category Filter Chips
-            if (categoryFilters.isNotEmpty)
-              FilterChipsRow(
-                filters: categoryFilters,
-                selectedStatus: selectedCategory,
-                onSingleSelected: (value) {
-                  setState(() {
-                    selectedCategory = value;
-                    if (value == 'all') selectedStatus = 'all';
-                    _currentPage = 1;
-                    _hasMore = true;
-                    _fetchStores(refresh: true);
-                  });
-                },
-              ),
 
-            // Stores List
-            UnifiedLoadingState(
-              isLoading: _isLoading && _stores.isEmpty,
-              isEmpty: filteredStores.isEmpty,
-              emptyIcon: 'store',
-              emptyTitle: 'no_stores_found'.tr(),
-              emptySubtitle: 'try_adjusting_search'.tr(),
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (scrollInfo) {
-                  if (!_isLoading && _hasMore && !_isSearching &&
-                      scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
-                    _fetchStores();
-                  }
-                  return false;
-                },
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
-                  itemCount: filteredStores.length + (_hasMore && !_isSearching ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index == filteredStores.length) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
-                    final store = filteredStores[index];
-                    return _buildStoreCard(context, store);
-                  },
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (statusFilters.isNotEmpty)
+                          FilterChipsRow(
+                            filters: statusFilters,
+                            selectedStatus: selectedStatus,
+                            onSingleSelected: (value) {
+                              setState(() {
+                                selectedStatus = value;
+                                if (value == 'all') selectedCategory = 'all';
+                                _fetchStores(refresh: true);
+                              });
+                            },
+                          ),
+                        
+                        if (categoryFilters.isNotEmpty)
+                          FilterChipsRow(
+                            filters: categoryFilters,
+                            selectedStatus: selectedCategory,
+                            onSingleSelected: (value) {
+                              setState(() {
+                                selectedCategory = value;
+                                if (value == 'all') selectedStatus = 'all';
+                                _currentPage = 1;
+                                _hasMore = true;
+                                _fetchStores(refresh: true);
+                              });
+                            },
+                          ),
+
+                        UnifiedLoadingState(
+                          isLoading: _isLoading && _stores.isEmpty,
+                          isEmpty: filteredStores.isEmpty,
+                          emptyIcon: 'store',
+                          emptyTitle: 'no_stores_found'.tr(),
+                          emptySubtitle: 'try_adjusting_search'.tr(),
+                          child: NotificationListener<ScrollNotification>(
+                            onNotification: (scrollInfo) {
+                              if (!_isLoading && _hasMore && !_isSearching &&
+                                  scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
+                                _fetchStores();
+                              }
+                              return false;
+                            },
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(16),
+                              itemCount: filteredStores.length + (_hasMore && !_isSearching ? 1 : 0),
+                              itemBuilder: (context, index) {
+                                if (index == filteredStores.length) {
+                                  return const Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: Center(child: CircularProgressIndicator()),
+                                  );
+                                }
+                                final store = filteredStores[index];
+                                return _buildStoreCard(context, store);
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-    ),
-  ),
-)  )      ],
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildStoreCard(BuildContext context, StoreDto store) {
+    final scheme = Theme.of(context).colorScheme;
     final locale = context.locale.languageCode;
     
-    // بناء معلومات إضافية للبطاقة
     final additionalInfo = [
       Row(
         children: [
-          Icon(Icons.layers, size: 14, color: Theme.of(context).colorScheme.primary),
+          Icon(Icons.layers, size: 14, color: scheme.primary),
           const SizedBox(width: 4),
           Text(
             '${'floor'.tr()}: ${store.floor}',
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: scheme.onSurface.withValues(alpha: 0.7),
               fontSize: 12,
             ),
           ),
           const SizedBox(width: 12),
-          Icon(Icons.star, color: Colors.amber, size: 14),
+          const Icon(Icons.star, color: Colors.amber, size: 14),
           const SizedBox(width: 4),
           Text(
             store.averageRating.toStringAsFixed(1),
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
+              color: scheme.onSurface,
               fontWeight: FontWeight.w600,
               fontSize: 12,
             ),
@@ -430,7 +416,7 @@ Expanded(
           Text(
             '(${store.ratingsCount})',
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              color: scheme.onSurface.withValues(alpha: 0.5),
               fontSize: 11,
             ),
           ),

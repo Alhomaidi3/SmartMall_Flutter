@@ -6,11 +6,11 @@ import '../screens/admin/categories_management_screen.dart';
 import '../screens/admin/users_management_screen.dart';
 
 class AdminMainScreen extends StatefulWidget {
-  final void Function(bool)? onThemeChanged;  // ✅ إضافة خاصية تغيير الثيم
+  final void Function(bool)? onThemeChanged; 
 
   const AdminMainScreen({
     super.key,
-    this.onThemeChanged,  // ✅ استقبال الدالة من main.dart
+    this.onThemeChanged,  
   });
 
   @override
@@ -22,7 +22,6 @@ class AdminMainScreenState extends State<AdminMainScreen> {
 
   late final List<Widget> _pages;
 
-  // ✅ دوال مساعدة للتنقل السريع
   void goToDashboard() => onTabTapped(0);
   void goToStores() => onTabTapped(1);
   void goToCategories() => onTabTapped(2);
@@ -40,12 +39,12 @@ class AdminMainScreenState extends State<AdminMainScreen> {
     _pages = [
     AdminDashboardScreen(
       onNavigateToUsers: goToUsers,
-      onNavigateToCategories: goToCategories,  // ✅ تمرير الدالة
+      onNavigateToCategories: goToCategories,  
     ),
       StoresManagementScreen(),
       CategoriesManagementScreen(),
       UsersManagementScreen(
-        onThemeChanged: widget.onThemeChanged,  // ✅ تمرير الدالة
+        onThemeChanged: widget.onThemeChanged,  
       ),
     ];
   }
@@ -65,20 +64,20 @@ class AdminMainScreenState extends State<AdminMainScreen> {
           color: isDark ? Colors.grey[900] : Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, -4),
             ),
           ],
         ),
         child: BottomNavigationBar(
-          backgroundColor: Colors.transparent,  // ✅ شفاف ليظهر لون Container
+          backgroundColor: Colors.transparent,  
           selectedItemColor: scheme.primary,
           unselectedItemColor: isDark ? Colors.grey[500] : Colors.grey[600],
           currentIndex: _currentIndex,
           onTap: onTabTapped,
           type: BottomNavigationBarType.fixed,
-          elevation: 0,  // ✅ إزالة الظل الافتراضي
+          elevation: 0,  
           items: [
             BottomNavigationBarItem(
               icon: Icon(

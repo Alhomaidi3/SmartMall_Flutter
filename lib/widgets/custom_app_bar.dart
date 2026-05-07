@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
-
 import 'admin_bottom_navigation_bar.dart';
 import 'user_bottom_navigation_bar.dart';
 
-/// 🔹 Custom AppBar - شريط علوي مخصص لجميع شاشات التطبيق
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final bool showBackButton;
@@ -59,7 +56,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  /// 🖼️ بناء أيقونة البروفايل مع منطق الضغط
   Widget _buildProfileIcon(BuildContext context, bool adminMode) {
     final scheme = Theme.of(context).colorScheme;
 
@@ -80,7 +76,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  /// 👤 معالجة ضغط أيقونة البروفايل
   void _handleProfilePress(BuildContext context, bool adminMode) {
     if (adminMode) {
       _handleAdminProfilePress(context);
@@ -89,44 +84,33 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     }
   }
 
-  /// 👑 معالجة ضغط البروفايل في وضع الأدمن
   void _handleAdminProfilePress(BuildContext context) {
-    // محاولة العثور على حالة AdminMainScreen
     final adminState = context.findAncestorStateOfType<AdminMainScreenState>();
     
     if (adminState != null && profileTabIndex != null) {
-      // ✅ تغيير التبويب في الشريط السفلي
       adminState.onTabTapped(profileTabIndex!);
     } else {
-      // 🔄 Fallback: التنقل إلى صفحة البروفايل
       Navigator.pushNamed(context, '/admin/profile');
     }
   }
 
-  /// 👤 معالجة ضغط البروفايل في وضع المستخدم العادي
   void _handleUserProfilePress(BuildContext context) {
-    // محاولة العثور على حالة MainScreen
     final userState = context.findAncestorStateOfType<MainScreenState>();
     
     if (userState != null && profileTabIndex != null) {
-      // ✅ تغيير التبويب في الشريط السفلي
       userState.changeTab(profileTabIndex!);
     } else {
-      // 🔄 Fallback: التنقل إلى صفحة البروفايل
       Navigator.pushNamed(context, '/profile');
     }
   }
 
-  /// 🏗️ بناء الجزء الأيسر من الـ AppBar
   Widget? _buildLeading(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    // 1️⃣ الأولوية: leadingWidget المخصص
     if (leadingWidget != null) {
       return leadingWidget;
     }
 
-    // 2️⃣ فلترة: إذا في categories
     if (categories != null && categories!.isNotEmpty) {
       return PopupMenuButton<String>(
         icon: Icon(Icons.filter_list, color: scheme.onSurface),
@@ -137,14 +121,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         },
         itemBuilder: (context) {
           return [
-            PopupMenuItem<String>(
+            const PopupMenuItem<String>(
               value: '',
-              child: Text('all_categories'.tr()),
+              child: Text('all_categories'),
             ),
             ...categories!.map(
               (cat) => PopupMenuItem<String>(
                 value: cat,
-                child: Text('${cat}_title'.tr()),
+                child: Text('${cat}_title'),
               ),
             ),
           ];
@@ -152,7 +136,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       );
     }
 
-    // 3️⃣ رجوع: إذا showBackButton = true
     if (showBackButton) {
       return IconButton(
         icon: const Icon(Icons.arrow_back),
@@ -161,7 +144,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       );
     }
 
-    // 4️⃣ لا شيء
     return null;
   }
 

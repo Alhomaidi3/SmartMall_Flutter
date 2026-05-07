@@ -43,7 +43,7 @@ class UnifiedTextField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: isRequired ? '$label *' : label,
         hintText: hintText,
-        labelStyle: TextStyle(color: scheme.onSurface.withOpacity(0.7)),
+        labelStyle: TextStyle(color: scheme.onSurface.withValues(alpha:0.7)),
         prefixIcon: Icon(icon, color: scheme.primary, size: 22),
         filled: true,
         fillColor: isDark ? Colors.grey[850] : Colors.grey[100],

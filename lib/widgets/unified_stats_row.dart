@@ -34,7 +34,7 @@ class UnifiedStatsRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (iconColor ?? scheme.primary).withOpacity(0.1),
+              color: (iconColor ?? scheme.primary).withValues(alpha:0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: iconColor ?? scheme.primary, size: 18),
@@ -43,7 +43,7 @@ class UnifiedStatsRow extends StatelessWidget {
           Text(
             title,
             style: textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurface.withOpacity(0.7),
+              color: scheme.onSurface.withValues(alpha:0.7),
             ),
           ),
           const SizedBox(width: 8),

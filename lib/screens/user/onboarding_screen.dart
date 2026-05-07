@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../widgets/widgets.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
@@ -15,38 +16,35 @@ class OnboardingScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-
-            // ===== Header (Skip Button) =====
-              Padding(
-                padding: const EdgeInsets.only(
-                  top: 12,      // 🔥 مسافة علوية إضافية
-                  left: 16,
-                  right: 16,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,  // 🔥 تكبير مساحة الضغط أفقياً
-                          vertical: 12,    // 🔥 تكبير مساحة الضغط عمودياً
-                        ),
-                        textStyle: const TextStyle(
-                          fontSize: 16,    // 🔥 تكبير الخط
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/home');
-                      },
-                      child: Text('skip'.tr()),
-                    ),
-                  ],
-                ),
+            Padding(
+              padding: const EdgeInsets.only(
+                top: 12,
+                left: 16,
+                right: 16,
               ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, '/home');
+                    },
+                    child: Text('skip'.tr()),
+                  ),
+                ],
+              ),
+            ),
 
-            // ===== Body =====
             Expanded(
               child: Center(
                 child: SingleChildScrollView(
@@ -99,7 +97,7 @@ class OnboardingScreen extends StatelessWidget {
                       Text(
                         'continue_with'.tr(),
                         style: textTheme.bodyMedium?.copyWith(
-                          color: scheme.onSurface.withOpacity(0.7),
+                          color: scheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
 
@@ -107,28 +105,28 @@ class OnboardingScreen extends StatelessWidget {
 
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
+                        children: [
                           InteractiveSocialIcon(
                             icon: Icons.g_mobiledata,
-                            color: Color(0xFFDB4437),
+                            color: const Color(0xFFDB4437),
                             url: 'https://www.google.com/',
                           ),
-                          SizedBox(width: 16),
+                          const SizedBox(width: 16),
                           InteractiveSocialIcon(
                             icon: Icons.travel_explore,
-                            color: Color(0xFF1DA1F2),
+                            color: const Color(0xFF1DA1F2),
                             url: 'https://twitter.com/',
                           ),
-                          SizedBox(width: 16),
+                          const SizedBox(width: 16),
                           InteractiveSocialIcon(
                             icon: Icons.camera_alt,
-                            color: Color(0xFFE4405F),
+                            color: const Color(0xFFE4405F),
                             url: 'https://www.instagram.com/',
                           ),
-                          SizedBox(width: 16),
+                          const SizedBox(width: 16),
                           InteractiveSocialIcon(
                             icon: Icons.facebook,
-                            color: Color(0xFF1877F2),
+                            color: const Color(0xFF1877F2),
                             url: 'https://www.facebook.com/',
                           ),
                         ],
@@ -146,8 +144,6 @@ class OnboardingScreen extends StatelessWidget {
     );
   }
 }
-
-// ================= Animated Button =================
 
 class AnimatedButton extends StatefulWidget {
   final String text;
@@ -203,8 +199,6 @@ class _AnimatedButtonState extends State<AnimatedButton> {
   }
 }
 
-// ================= Social Icons =================
-
 class InteractiveSocialIcon extends StatefulWidget {
   final IconData icon;
   final Color color;
@@ -218,30 +212,38 @@ class InteractiveSocialIcon extends StatefulWidget {
   });
 
   @override
-  State<InteractiveSocialIcon> createState() =>
-      _InteractiveSocialIconState();
+  State<InteractiveSocialIcon> createState() => _InteractiveSocialIconState();
 }
 
 class _InteractiveSocialIconState extends State<InteractiveSocialIcon> {
   double _scale = 1.0;
 
-  Future<void> _launchUrl(BuildContext context, String url) async {
+  Future<void> _launchUrl(String url) async {
     final Uri uri = Uri.parse(url);
-    final confirmed = await _showConfirmationDialog(context, url);
 
-    if (confirmed ?? false) {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('cannot_launch'.tr())),
-        );
-      }
+    final confirmed = await _showConfirmationDialog(url);
+
+    if (!mounted || !(confirmed ?? false)) return;
+
+    final canLaunch = await canLaunchUrl(uri);
+
+    if (!mounted) return;
+
+    if (canLaunch) {
+      await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    } else {
+      showMessage(
+        context,
+        'cannot_launch'.tr(),
+        type: MessageType.error,
+      );
     }
   }
 
-  Future<bool?> _showConfirmationDialog(
-      BuildContext context, String url) {
+  Future<bool?> _showConfirmationDialog(String url) {
     return showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -269,13 +271,17 @@ class _InteractiveSocialIconState extends State<InteractiveSocialIcon> {
       onTapDown: (_) => setState(() => _scale = 0.85),
       onTapUp: (_) => setState(() => _scale = 1.0),
       onTapCancel: () => setState(() => _scale = 1.0),
-      onTap: () => _launchUrl(context, widget.url),
+      onTap: () => _launchUrl(widget.url),
       child: Transform.scale(
         scale: _scale,
         child: CircleAvatar(
           radius: 26,
           backgroundColor: widget.color,
-          child: Icon(widget.icon, color: Colors.white, size: 26),
+          child: Icon(
+            widget.icon,
+            color: Colors.white,
+            size: 26,
+          ),
         ),
       ),
     );

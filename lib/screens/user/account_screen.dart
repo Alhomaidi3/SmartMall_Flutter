@@ -55,7 +55,7 @@ class _AccountScreenState extends State<AccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -90,63 +90,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     children: [
                       const SizedBox(height: 24),
 
-                      // 👤 Account Info Card
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.grey[850] : Colors.grey[200],
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 28,
-                              backgroundColor: Colors.orange,
-                              backgroundImage: _user?.profileImageUrl != null
-                                  ? NetworkImage(_user!.profileImageUrl!)
-                                  : null,
-                              child: _user?.profileImageUrl == null
-                                  ? const Icon(Icons.person, color: Colors.white, size: 30)
-                                  : null,
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _user?.fullName ?? '—',
-                                    style: TextStyle(
-                                      color: scheme.onSurface,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _user?.email ?? '—',
-                                    style: TextStyle(
-                                      color: scheme.onSurface.withOpacity(0.7),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (_user?.isActive == false)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  'inactive'.tr(),
-                                  style: const TextStyle(color: Colors.red, fontSize: 12),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
+                      _buildUserInfoCard(isDark, scheme),
 
                       const SizedBox(height: 36),
 
@@ -160,39 +104,10 @@ class _AccountScreenState extends State<AccountScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // معلومات الحساب
-                      Card(
-                        color: isDark ? Colors.grey[850] : Colors.grey[200],
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildInfoRow('full_name'.tr(), _user?.fullName ?? '—', scheme.onSurface),
-                              const Divider(),
-                              _buildInfoRow('email'.tr(), _user?.email ?? '—', scheme.onSurface),
-                              const Divider(),
-                              _buildInfoRow('phone_number'.tr(), _user?.phone ?? '—', scheme.onSurface),
-                              const Divider(),
-                              _buildInfoRow('gender'.tr(), _user?.gender?.tr() ?? '—', scheme.onSurface),
-                              const Divider(),
-                              _buildInfoRow('role'.tr(), _user?.role.tr() ?? '—', scheme.onSurface),
-                              const Divider(),
-                              _buildInfoRow('date_of_birth'.tr(), _formatDate(_user?.dateOfBirth), scheme.onSurface),
-                              const Divider(),
-                              _buildInfoRow('member_since'.tr(), _formatDate(_user?.createdAt), scheme.onSurface),
-                            ],
-                          ),
-                        ),
-                      ),
+                      _buildAccountInfoCard(isDark, scheme),
 
                       const SizedBox(height: 24),
 
-                      // أزرار الإجراءات
                       SettingsTile(
                         icon: Icons.edit,
                         title: 'edit_profile'.tr(),
@@ -214,15 +129,104 @@ class _AccountScreenState extends State<AccountScreen> {
                         title: 'change_password'.tr(),
                         isDark: isDark,
                         onTap: () {
-                          // TODO: نافذة تغيير كلمة المرور
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('feature_coming_soon'.tr())),
+                          showMessage(
+                            context,
+                            'feature_coming_soon'.tr(),
+                            type: MessageType.info,
                           );
                         },
                       ),
                     ],
                   ),
                 ),
+    );
+  }
+
+  Widget _buildUserInfoCard(bool isDark, ColorScheme scheme) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[850] : Colors.grey[200],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: Colors.orange,
+            backgroundImage: _user?.profileImageUrl != null
+                ? NetworkImage(_user!.profileImageUrl!)
+                : null,
+            child: _user?.profileImageUrl == null
+                ? const Icon(Icons.person, color: Colors.white, size: 30)
+                : null,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _user?.fullName ?? '—',
+                  style: TextStyle(
+                    color: scheme.onSurface,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _user?.email ?? '—',
+                  style: TextStyle(
+                    color: scheme.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_user?.isActive == false)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'inactive'.tr(),
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAccountInfoCard(bool isDark, ColorScheme scheme) {
+    return Card(
+      color: isDark ? Colors.grey[850] : Colors.grey[200],
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildInfoRow('full_name'.tr(), _user?.fullName ?? '—', scheme.onSurface),
+            const Divider(),
+            _buildInfoRow('email'.tr(), _user?.email ?? '—', scheme.onSurface),
+            const Divider(),
+            _buildInfoRow('phone_number'.tr(), _user?.phone ?? '—', scheme.onSurface),
+            const Divider(),
+            _buildInfoRow('gender'.tr(), _user?.gender.tr() ?? '—', scheme.onSurface),
+            const Divider(),
+            _buildInfoRow('role'.tr(), _user?.role.tr() ?? '—', scheme.onSurface),
+            const Divider(),
+            _buildInfoRow('date_of_birth'.tr(), _formatDate(_user?.dateOfBirth), scheme.onSurface),
+          ],
+        ),
+      ),
     );
   }
 
@@ -237,7 +241,7 @@ class _AccountScreenState extends State<AccountScreen> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: textColor.withOpacity(0.7),
+              color: textColor.withValues(alpha: 0.7),
             ),
           ),
           Text(

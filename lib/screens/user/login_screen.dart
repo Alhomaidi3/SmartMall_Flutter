@@ -3,7 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
 import '../../models/user.dart';
-import '../../widgets/widgets.dart';  // 🔥 أضف هذا السطر
+import '../../widgets/widgets.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,15 +13,12 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // 🔹 Controllers
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   
-  // 🔹 State variables
   bool _isLoading = false;
   bool _obscurePassword = true;
   
-  // 🔹 Service
   final ApiService _apiService = ApiService();
 
   @override
@@ -31,9 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // 🔹 دالة تسجيل الدخول
   Future<void> _login() async {
-    // التحقق من صحة المدخلات
     if (_emailController.text.trim().isEmpty) {
       showMessage(context, 'email_required'.tr(), type: MessageType.error);
       return;
@@ -54,7 +49,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     
     try {
-      // 🔹 إرسال طلب تسجيل الدخول
       final response = await _apiService.post(
         '/users/login',
         {
@@ -63,39 +57,42 @@ class _LoginScreenState extends State<LoginScreen> {
         },
         requiresAuth: false,
       );
-      
+
+      if (!mounted) return;
+
       if (response['success'] == true) {
         final data = response['data'];
-        
-        // 🔹 حفظ التوكن
+
         await StorageService.saveToken(data['token']);
-        
-        // 🔹 حفظ بيانات المستخدم
         await StorageService.saveUser(data['user']);
-        
-        // 🔹 تحويل البيانات إلى نموذج User
+
         final user = User.fromJson(data['user']);
-        
+
         if (!mounted) return;
-        
-        // 🔥 رسالة نجاح
+
         showMessage(context, 'login_success'.tr(), type: MessageType.success);
-        
-        // 🔹 التوجيه حسب الصلاحية بعد تأخير بسيط
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) {
-            if (user.isAdmin) {
-              Navigator.pushReplacementNamed(context, '/admin');
-            } else {
-              Navigator.pushReplacementNamed(context, '/home');
-            }
-          }
-        });
+
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        if (!mounted) return;
+
+        Navigator.pushReplacementNamed(
+          context,
+          user.isAdmin ? '/admin' : '/home',
+        );
       } else {
-        showMessage(context, response['message'] ?? 'login_failed'.tr(), type: MessageType.error);
+        if (!mounted) return;
+
+        showMessage(
+          context,
+          response['message'] ?? 'login_failed'.tr(),
+          type: MessageType.error,
+        );
       }
     } catch (e) {
-      String errorMessage = e.toString().replaceAll('Exception: ', '');
+      if (!mounted) return;
+
+      final errorMessage = e.toString().replaceAll('Exception: ', '');
       showMessage(context, errorMessage, type: MessageType.error);
     } finally {
       if (mounted) {
@@ -136,7 +133,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const Spacer(),
                 
-                // 🔹 حقل البريد الإلكتروني
                 _CustomTextField(
                   hint: 'email'.tr(),
                   keyboardType: TextInputType.emailAddress,
@@ -144,7 +140,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 25),
                 
-                // 🔹 حقل كلمة المرور
                 _CustomTextField(
                   hint: 'enter_password'.tr(),
                   isPassword: true,
@@ -156,7 +151,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 35),
                 
-                // 🔹 زر تسجيل الدخول
                 Center(
                   child: _isLoading
                       ? const CircularProgressIndicator()
@@ -174,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text(
                       "dont_have_account".tr(),
                       style: textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurface.withOpacity(0.7),
+                        color: scheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -241,12 +235,15 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// ---------- زر متحرك ----------
 class AnimatedButton extends StatefulWidget {
   final String text;
   final VoidCallback onPressed;
 
-  const AnimatedButton({required this.text, required this.onPressed, super.key});
+  const AnimatedButton({
+    required this.text,
+    required this.onPressed,
+    super.key,
+  });
 
   @override
   State<AnimatedButton> createState() => _AnimatedButtonState();
@@ -292,7 +289,6 @@ class _AnimatedButtonState extends State<AnimatedButton> {
   }
 }
 
-// ---------- TextField مخصص ----------
 class _CustomTextField extends StatelessWidget {
   final String hint;
   final bool isPassword;
@@ -323,7 +319,7 @@ class _CustomTextField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: textTheme.bodySmall?.copyWith(
-          color: scheme.onSurface.withOpacity(0.6),
+          color: scheme.onSurface.withValues(alpha: 0.6),
         ),
         enabledBorder: UnderlineInputBorder(
           borderSide: BorderSide(color: scheme.onSurface),

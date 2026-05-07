@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// 🎨 Interactive Settings Tile with full tap support
 class SettingsTile extends StatefulWidget {
   final IconData icon;
   final String title;
@@ -80,7 +79,7 @@ class _SettingsTileState extends State<SettingsTile> {
                         Text(
                           widget.subtitle!,
                           style: TextStyle(
-                            color: scheme.onSurface.withOpacity(0.7),
+                            color: scheme.onSurface.withValues(alpha:0.7),
                             fontSize: 12,
                           ),
                         ),
@@ -91,7 +90,7 @@ class _SettingsTileState extends State<SettingsTile> {
                     Icon(
                       Icons.arrow_forward_ios,
                       size: 14,
-                      color: scheme.onSurface.withOpacity(0.6),
+                      color: scheme.onSurface.withValues(alpha:0.6),
                     ),
               ],
             ),

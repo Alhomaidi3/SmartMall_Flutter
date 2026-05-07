@@ -9,13 +9,12 @@ import '/models/category.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback onProfilePressed;
-  final void Function(int storeId) onDirectionsRequested; // ✅ إضافة هذا
+  final void Function(int storeId) onDirectionsRequested;
 
   const HomeScreen({
     super.key,
     required this.onProfilePressed,
-        required this.onDirectionsRequested, // ✅ إضافة هذا
-
+    required this.onDirectionsRequested,
   });
 
   @override
@@ -26,7 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String searchQuery = '';
   final TextEditingController searchController = TextEditingController();
 
-  // ✅ متغيرات API
   final StoreService _storeService = StoreService();
   final CategoryService _categoryService = CategoryService();
   
@@ -38,9 +36,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // ✅ لا تستخدم الترجمة هنا
-    // فقط قم بتهيئة الـ Controller
   }
+
   void _requestDirections(int storeId) {
     widget.onDirectionsRequested(storeId);
   }
@@ -48,7 +45,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // ✅ استخدم الترجمة هنا بعد أن تصبح جاهزة
     _loadData();
   }
 
@@ -65,14 +61,16 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
+      final lang = context.locale.languageCode; 
       final response = await _storeService.getStores(
+        
         page: 1,
         pageSize: 100,
         language: context.locale.languageCode,
       );
       
       final categories = await _categoryService.getCategories(
-        language: context.locale.languageCode,
+        language: lang,
       );
 
       if (mounted) {
@@ -92,7 +90,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // 🔹 دالة لتحويل الحروف العربية إلى شكل موحد لتسهيل البحث
   String normalize(String input) {
     return input
         .toLowerCase()
@@ -104,7 +101,6 @@ class _HomeScreenState extends State<HomeScreen> {
         .replaceAll(RegExp(r'َ|ً|ُ|ٌ|ِ|ٍ|ْ'), '');
   }
 
-  // 🔹 الحصول على المتاجر المفلترة حسب البحث
   List<StoreDto> get filteredStores {
     if (searchQuery.isEmpty) return _allStores;
     
@@ -122,7 +118,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }).toList();
   }
 
-  // 🔹 تجميع المتاجر حسب الفئة
   List<CategoryGroup> get groupedStores {
     final Map<int, List<StoreDto>> grouped = {};
     final stores = filteredStores;
@@ -140,10 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
           id: 0,
           nameAr: 'other'.tr(),
           nameEn: 'Other',
-          iconUrl: null,
           isActive: true,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
           storesCount: 0,
         ),
       );
@@ -164,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final categoryNames = _categories.map((c) => c.getName(context.locale.languageCode)).toList();
 
     return Scaffold(
-      backgroundColor: scheme.background,
+      backgroundColor: scheme.surface,
       appBar: CustomAppBar(
         title: 'smart_mall_guide'.tr(),
         categories: categoryNames,
@@ -241,8 +233,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                             child: StoreCard(
                                               store: store,
-    onDirectionsPressed: () => _requestDirections(store.id), // ✅ تمرير store.id
-                                                                                    )                                          );
+                                              onDirectionsPressed: () => _requestDirections(store.id),
+                                            ),
+                                          );
                                         },
                                       ),
                                     ),
@@ -257,15 +250,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// 🔹 بطاقة المتجر
 class StoreCard extends StatefulWidget {
   final StoreDto store;
-  final VoidCallback? onDirectionsPressed; // ✅ إضافة هذا
+  final VoidCallback? onDirectionsPressed;
 
   const StoreCard({
     super.key, 
     required this.store,
-    this.onDirectionsPressed, // ✅ إضافة هذا
+    this.onDirectionsPressed,
   });
 
   @override
@@ -288,7 +280,6 @@ class _StoreCardState extends State<StoreCard> {
         onTapUp: (_) => setState(() => _scale = 1.0),
         onTapCancel: () => setState(() => _scale = 1.0),
         onTap: () async {
-          // ✅ انتظار النتيجة من StoreDetailsScreen
           final result = await Navigator.push(
             context,
             MaterialPageRoute(
@@ -296,12 +287,11 @@ class _StoreCardState extends State<StoreCard> {
             ),
           );
           
-          // ✅ إذا تم طلب الاتجاهات، قم باستدعاء المعالج
           if (result != null && result['navigateToMap'] == true && widget.onDirectionsPressed != null) {
             widget.onDirectionsPressed!();
           }
         },
-                  child: AnimatedScale(
+        child: AnimatedScale(
           scale: _scale,
           duration: const Duration(milliseconds: 150),
           child: Container(
@@ -310,7 +300,7 @@ class _StoreCardState extends State<StoreCard> {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 6,
                   offset: const Offset(0, 4),
                 ),
@@ -320,7 +310,9 @@ class _StoreCardState extends State<StoreCard> {
                       image: NetworkImage(imageUrl),
                       fit: BoxFit.cover,
                       colorFilter: ColorFilter.mode(
-                          Colors.black.withOpacity(0.1), BlendMode.darken),
+                        Colors.black.withValues(alpha: 0.1),
+                        BlendMode.darken,
+                      ),
                     )
                   : const DecorationImage(
                       image: AssetImage('assets/images/placeholder.png'),
@@ -333,7 +325,7 @@ class _StoreCardState extends State<StoreCard> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.6),
+                  color: Colors.black.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -355,9 +347,12 @@ class _StoreCardState extends State<StoreCard> {
   }
 }
 
-// 🔹 فئة تجميع الفئات
 class CategoryGroup {
   final String title;
   final List<StoreDto> items;
-  CategoryGroup({required this.title, required this.items});
+  
+  CategoryGroup({
+    required this.title,
+    required this.items,
+  });
 }

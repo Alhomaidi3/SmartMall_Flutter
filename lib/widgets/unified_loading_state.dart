@@ -39,20 +39,20 @@ class UnifiedLoadingState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: scheme.primary.withOpacity(0.1),
+                color: scheme.primary.withValues(alpha:0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 _getEmptyIcon(),
                 size: 60,
-                color: scheme.primary.withOpacity(0.5),
+                color: scheme.primary.withValues(alpha:0.5),
               ),
             ),
             const SizedBox(height: 16),
             Text(
               emptyTitle ?? 'no_data_found'.tr(),
               style: textTheme.titleMedium?.copyWith(
-                color: scheme.onSurface.withOpacity(0.7),
+                color: scheme.onSurface.withValues(alpha:0.7),
               ),
             ),
             if (emptySubtitle != null) ...[
@@ -60,7 +60,7 @@ class UnifiedLoadingState extends StatelessWidget {
               Text(
                 emptySubtitle!,
                 style: textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurface.withOpacity(0.5),
+                  color: scheme.onSurface.withValues(alpha:0.5),
                 ),
               ),
             ],

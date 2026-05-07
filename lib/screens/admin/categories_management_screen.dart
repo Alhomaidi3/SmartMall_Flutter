@@ -22,7 +22,6 @@ class _CategoriesManagementScreenState extends State<CategoriesManagementScreen>
   
   final CategoryService _categoryService = CategoryService();
 
-  // 🔹 ألوان افتراضية للفئات
   final List<Color> _categoryColors = [
     Colors.blue,
     Colors.green,
@@ -114,25 +113,26 @@ class _CategoriesManagementScreenState extends State<CategoriesManagementScreen>
       return true;
     }).toList();
   }
-Future<void> _addCategory() async {
-  final result = await Navigator.push(
-    context,
-    MaterialPageRoute(builder: (_) => const CategoryFormScreen()),
-  );
-  if (result == true) {
-    await _fetchCategories();
-  }
-}
 
-Future<void> _editCategory(Category category) async {
-  final result = await Navigator.push(
-    context,
-    MaterialPageRoute(builder: (_) => CategoryFormScreen(category: category)),
-  );
-  if (result == true) {
-    await _fetchCategories();
+  Future<void> _addCategory() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CategoryFormScreen()),
+    );
+    if (result == true) {
+      await _fetchCategories();
+    }
   }
-}
+
+  Future<void> _editCategory(Category category) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => CategoryFormScreen(category: category)),
+    );
+    if (result == true) {
+      await _fetchCategories();
+    }
+  }
 
   Future<void> _deleteCategory(Category category) async {
     final confirmed = await showDialog<bool>(
@@ -170,10 +170,19 @@ Future<void> _editCategory(Category category) async {
       
       try {
         await _categoryService.deleteCategory(category.id);
+
+        if (!mounted) return;
         showMessage(context, 'category_deleted'.tr(), type: MessageType.success);
         await _fetchCategories();
       } catch (e) {
-        showMessage(context, e.toString().replaceAll('Exception: ', ''), type: MessageType.error);
+        if (!mounted) return; 
+
+        showMessage(
+          context,
+          e.toString().replaceAll('Exception: ', ''),
+          type: MessageType.error,
+        );
+
         setState(() => _isLoading = false);
       }
     }
@@ -215,21 +224,18 @@ Future<void> _editCategory(Category category) async {
         leadingWidget: Container(
           margin: const EdgeInsets.only(left: 8),
           decoration: BoxDecoration(
-            color: scheme.primary.withOpacity(0.1),
+            color: scheme.primary.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: IconButton(
             icon: const Icon(Icons.notifications_outlined),
             color: scheme.primary,
-            onPressed: () {
-              // TODO: فتح صفحة الإشعارات
-            },
+            onPressed: () {},
           ),
         ),
       ),
       body: Column(
         children: [
-          // Search Bar
           Padding(
             padding: const EdgeInsets.all(16),
             child: CustomSearchBar(
@@ -242,7 +248,6 @@ Future<void> _editCategory(Category category) async {
             ),
           ),
 
-          // Stats Row with Add Button
           UnifiedStatsRow(
             icon: Icons.category,
             title: 'total_categories'.tr(),
@@ -251,72 +256,70 @@ Future<void> _editCategory(Category category) async {
             addButtonText: 'add_category'.tr(),
           ),
 
-          // Scrollable Content مع زوايا منحنية
-Expanded(
-      child: Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8), 
-child: ClipRRect(
-    borderRadius: BorderRadius.circular(20), // زاوية منحنية 20
-    child: Container(
-    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Status Filter Chips
-            FilterChipsRow(
-              filters: [
-                const FilterChipData(
-                  value: 'all',
-                  labelKey: 'all_categories',
-                  icon: Icons.category_outlined,
-                ),
-                const FilterChipData(
-                  value: 'active',
-                  labelKey: 'active',
-                  icon: Icons.check_circle_outline,
-                  selectedColor: Colors.green,
-                ),
-                const FilterChipData(
-                  value: 'inactive',
-                  labelKey: 'inactive',
-                  icon: Icons.remove_circle_outline,
-                  selectedColor: Colors.red,
-                ),
-              ],
-              selectedStatus: selectedStatus,
-              onSingleSelected: (value) => setState(() {
-                selectedStatus = value;
-              }),
-            ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        FilterChipsRow(
+                          filters: [
+                            const FilterChipData(
+                              value: 'all',
+                              labelKey: 'all_categories',
+                              icon: Icons.category_outlined,
+                            ),
+                            const FilterChipData(
+                              value: 'active',
+                              labelKey: 'active',
+                              icon: Icons.check_circle_outline,
+                              selectedColor: Colors.green,
+                            ),
+                            const FilterChipData(
+                              value: 'inactive',
+                              labelKey: 'inactive',
+                              icon: Icons.remove_circle_outline,
+                              selectedColor: Colors.red,
+                            ),
+                          ],
+                          selectedStatus: selectedStatus,
+                          onSingleSelected: (value) => setState(() {
+                            selectedStatus = value;
+                          }),
+                        ),
 
-            // Categories List
-            UnifiedLoadingState(
-              isLoading: _isLoading,
-              isEmpty: filteredCategories.isEmpty,
-              emptyIcon: 'category',
-              emptyTitle: 'no_categories_found'.tr(),
-              emptySubtitle: 'try_adjusting_search'.tr(),
-              child: RefreshIndicator(
-                onRefresh: _fetchCategories,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
-                  itemCount: filteredCategories.length,
-                  itemBuilder: (context, index) {
-                    final category = filteredCategories[index];
-                    return _buildCategoryCard(context, category);
-                  },
+                        UnifiedLoadingState(
+                          isLoading: _isLoading,
+                          isEmpty: filteredCategories.isEmpty,
+                          emptyIcon: 'category',
+                          emptyTitle: 'no_categories_found'.tr(),
+                          emptySubtitle: 'try_adjusting_search'.tr(),
+                          child: RefreshIndicator(
+                            onRefresh: _fetchCategories,
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(16),
+                              itemCount: filteredCategories.length,
+                              itemBuilder: (context, index) {
+                                final category = filteredCategories[index];
+                                return _buildCategoryCard(context, category);
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-    ),
-  ),
-))
+          ),
         ],
       ),
     );
@@ -327,7 +330,6 @@ child: ClipRRect(
     final categoryColor = _getCategoryColor(category.id);
     final categoryIcon = _getCategoryIcon(category.getName(locale));
 
-    // بناء معلومات إضافية للبطاقة
     final additionalInfo = [
       Row(
         children: [
@@ -362,7 +364,7 @@ child: ClipRRect(
       leading: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: categoryColor.withOpacity(0.1),
+          color: categoryColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(

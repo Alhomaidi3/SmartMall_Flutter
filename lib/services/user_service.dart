@@ -1,11 +1,9 @@
 import '../services/api_service.dart';
 import '../models/user.dart';
-import 'dart:convert';
+import 'package:flutter/foundation.dart';
 
 class UserService {
   final ApiService _apiService = ApiService();
-
-  // ==================== جلب المستخدمين (Admin) ====================
 
   Future<List<User>> getUsers() async {
     try {
@@ -58,9 +56,6 @@ class UserService {
     }
   }
 
-  // ==================== الملف الشخصي (Profile) ====================
-
-  /// جلب المستخدم الحالي
   Future<User> getCurrentUser() async {
     try {
       final response = await _apiService.get('/Users/profile', requiresAuth: true);
@@ -75,7 +70,6 @@ class UserService {
     }
   }
 
-  /// تحديث الملف الشخصي للمستخدم الحالي
   Future<User> updateProfile(Map<String, dynamic> data) async {
     try {
       final response = await _apiService.put('/Users/profile', data, requiresAuth: true);
@@ -90,7 +84,6 @@ class UserService {
     }
   }
 
-  /// تحديث مستخدم بواسطة Admin
   Future<User> updateUser(int id, Map<String, dynamic> data) async {
     try {
       final response = await _apiService.put('/Users/$id', data, requiresAuth: true);
@@ -105,7 +98,6 @@ class UserService {
     }
   }
 
-  /// تغيير كلمة المرور
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
@@ -130,19 +122,13 @@ class UserService {
     }
   }
 
-  // ==================== تسجيل الخروج ====================
-
-  /// تسجيل الخروج
   Future<void> logout() async {
     try {
       await _apiService.post('/Users/logout', {}, requiresAuth: true);
     } catch (e) {
-      // تجاهل الخطأ أثناء تسجيل الخروج
-      print('Logout error (ignored): $e');
+      debugPrint('Logout error (ignored): $e');
     }
   }
-
-  // ==================== إدارة المستخدمين (Admin) ====================
 
   Future<void> deleteUser(int id) async {
     try {
@@ -195,8 +181,6 @@ class UserService {
       throw Exception('Failed to change user role: $e');
     }
   }
-
-  // ==================== المفضلات والتقييمات والإحصائيات ====================
 
   Future<List<dynamic>> getFavorites() async {
     try {

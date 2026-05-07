@@ -28,7 +28,7 @@ void showMessage(
       break;
 
     case MessageType.info:
-      iconColor = Colors.blueAccent.shade400; // 🔥 لون مميز للـ info
+      iconColor = Colors.blueAccent.shade400;
       borderColor = Colors.blueAccent.shade200;
       icon = Icons.info_rounded;
       break;
@@ -55,7 +55,7 @@ void showMessage(
         duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: containerColor.withOpacity(0.95),
+          color: containerColor.withValues(alpha:0.95),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: borderColor, width: 1),
           boxShadow: const [
@@ -72,7 +72,7 @@ void showMessage(
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.15),
+                color: iconColor.withValues(alpha:0.15),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: iconColor, size: 20),

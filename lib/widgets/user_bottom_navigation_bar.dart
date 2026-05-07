@@ -26,7 +26,6 @@ class MainScreenState extends State<MainScreen> {
     });
   }
   
-  // ✅ دالة لاستقبال طلب الاتجاهات من HomeScreen
   void _handleDirectionsRequested(int storeId) {
     changeTab(1, selectedStoreId: storeId);
   }
@@ -42,10 +41,10 @@ class MainScreenState extends State<MainScreen> {
         children: [
           HomeScreen(
             onProfilePressed: () => changeTab(2),
-            onDirectionsRequested: _handleDirectionsRequested, // ✅ تمرير المعالج
+            onDirectionsRequested: _handleDirectionsRequested, 
           ),
           MapScreen(
-            key: ValueKey(_selectedStoreIdForMap), // ✅ لإعادة بناء الخريطة عند تغيير ID المتجر
+            key: ValueKey(_selectedStoreIdForMap), 
             onProfilePressed: () => changeTab(2),
             selectedStoreId: _selectedStoreIdForMap,
           ),
@@ -58,12 +57,11 @@ class MainScreenState extends State<MainScreen> {
         backgroundColor: isDark ? Colors.grey[900] : Colors.grey[100],
         selectedItemColor: isDark ? Colors.orange : scheme.primary,
         unselectedItemColor:
-            isDark ? Colors.grey[500] : scheme.onSurface.withOpacity(0.6),
+            isDark ? Colors.grey[500] : scheme.onSurface.withValues(alpha:0.6),
         currentIndex: currentIndex,
         onTap: (index) {
           changeTab(index);
           if (index != 1) {
-            // ✅ إعادة تعيين ID المتجر عند مغادرة الخريطة
             _selectedStoreIdForMap = null;
           }
         },

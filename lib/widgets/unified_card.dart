@@ -1,4 +1,3 @@
-// widgets/unified_card.dart
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 
@@ -52,102 +51,94 @@ class UnifiedCard extends StatelessWidget {
         color: isDark ? Colors.grey[850] : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: !isActive
-            ? Border.all(color: Colors.red.withOpacity(0.3), width: 1.5)
+            ? Border.all(color: Colors.red.withValues(alpha:0.3), width: 1.5)
             : isAdmin
-                ? Border.all(color: scheme.primary.withOpacity(0.3), width: 1.5)
+                ? Border.all(color: scheme.primary.withValues(alpha:0.3), width: 1.5)
                 : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha:0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Stack(
-        children: [
-          InkWell(
-            borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Leading Widget
-                  if (leading != null)
-                    leading!
-                  else
-                    _buildDefaultLeading(context),
-                  
-                  const SizedBox(width: 12),
-                  
-                  // Content
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (leading != null)
+                leading!
+              else
+                _buildDefaultLeading(context),
+              
+              const SizedBox(width: 12),
+              
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                title,
-                                style: TextStyle(
-                                  color: scheme.onSurface,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            if (isAdmin)
-                              _buildBadge(
-                                label: 'admin'.tr(),
-                                color: scheme.primary,
-                              ),
-                            if (!isActive)
-                              _buildBadge(
-                                label: statusLabel ?? 'inactive'.tr(),
-                                color: Colors.red,
-                              ),
-                            if (isActive && statusLabel != null)
-                              _buildBadge(
-                                label: statusLabel!,
-                                color: Colors.green,
-                              ),
-                          ],
-                        ),
-                        if (subtitle.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            subtitle,
+                        Expanded(
+                          child: Text(
+                            title,
                             style: TextStyle(
-                              color: scheme.primary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                              color: scheme.onSurface,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ],
-                        if (additionalInfo?.isNotEmpty ?? false) ...[
-                          const SizedBox(height: 4),
-                          ...additionalInfo!,
-                        ],
+                        ),
+                        const SizedBox(width: 8),
+                        if (isAdmin)
+                          _buildBadge(
+                            label: 'admin'.tr(),
+                            color: scheme.primary,
+                          ),
+                        if (!isActive)
+                          _buildBadge(
+                            label: statusLabel ?? 'inactive'.tr(),
+                            color: Colors.red,
+                          ),
+                        if (isActive && statusLabel != null)
+                          _buildBadge(
+                            label: statusLabel!,
+                            color: Colors.green,
+                          ),
                       ],
                     ),
-                  ),
-                  
-                  // Actions
-                  if (customActions != null)
-                    customActions!
-                  else if (onEdit != null || onDelete != null)
-                    _buildDefaultActions(context),
-                ],
+                    if (subtitle.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: scheme.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                    if (additionalInfo?.isNotEmpty ?? false) ...[
+                      const SizedBox(height: 4),
+                      ...additionalInfo!,
+                    ],
+                  ],
+                ),
               ),
-            ),
+              
+              if (customActions != null)
+                customActions!
+              else if (onEdit != null || onDelete != null)
+                _buildDefaultActions(context),
+            ],
           ),
-          
-        ],
+        ),
       ),
     );
   }
@@ -161,7 +152,7 @@ class UnifiedCard extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha:0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
@@ -179,7 +170,7 @@ class UnifiedCard extends StatelessWidget {
                   width: 70,
                   height: 70,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (_, _, _) => Container(
                     width: 70,
                     height: 70,
                     color: Colors.grey[300],
@@ -189,7 +180,7 @@ class UnifiedCard extends StatelessWidget {
               : Container(
                   width: 70,
                   height: 70,
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha:0.1),
                   child: Icon(Icons.store, color: color, size: 35),
                 ),
         );
@@ -201,7 +192,7 @@ class UnifiedCard extends StatelessWidget {
             shape: BoxShape.circle,
             gradient: data.isAdmin == true
                 ? LinearGradient(
-                    colors: [color, color.withOpacity(0.7)],
+                    colors: [color, color.withValues(alpha:0.7)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
@@ -221,7 +212,7 @@ class UnifiedCard extends StatelessWidget {
                       width: 55,
                       height: 55,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Text(
+                      errorBuilder: (_, _, _) => Text(
                         title[0].toUpperCase(),
                         style: const TextStyle(
                           color: Colors.white,
@@ -268,7 +259,7 @@ class UnifiedCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha:0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(

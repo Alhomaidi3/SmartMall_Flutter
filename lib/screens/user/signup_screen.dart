@@ -24,6 +24,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _obscureConfirmPassword = true;
   String? _gender;
   bool _isLoading = false;
+  double _scale = 1.0;
   
   final ApiService _apiService = ApiService();
 
@@ -63,7 +64,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
       showMessage(context, 'gender_required'.tr(), type: MessageType.error);
       return;
     }
-        if (_dobController.text.isEmpty) {
+    
+    if (_dobController.text.isEmpty) {
       showMessage(context, 'date_of_birth_required'.tr(), type: MessageType.error);
       return;
     }
@@ -82,11 +84,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       showMessage(context, 'passwords_not_match'.tr(), type: MessageType.error);
       return;
     }
-    
 
     setState(() => _isLoading = true);
-  
-    try {
+      try {
       final response = await _apiService.post(
         '/users/register',
         {
@@ -99,46 +99,65 @@ class _SignUpScreenState extends State<SignUpScreen> {
         },
         requiresAuth: false,
       );
-      
-      if (response['success'] == true) {
-  final data = response['data'];
-  
-  await StorageService.saveToken(data['token']);
-  await StorageService.saveUser(data['user']);
-  
-  showMessage(context, 'account_created_successfully'.tr(), type: MessageType.success);
-  
-  Future.delayed(const Duration(milliseconds: 1500), () {
-    if (mounted) {
-      Navigator.pushReplacementNamed(context, '/home');
-    }
-  });
-} else {
-  // 🔥 الـ API يرسل رسالة خطأ مثل "البريد الإلكتروني مسجل مسبقاً"
-  final errorMessage = response['message'] ?? 'registration_failed'.tr();
-  showMessage(context, errorMessage, type: MessageType.error);
-}
-    } catch (e) {
-  String errorMessage;
-  
-  if (e is ApiException) {
-    // 🔥 خطأ من الـ API
-    errorMessage = e.message;
-  } else {
-    // 🔥 خطأ عام
-    errorMessage = e.toString().replaceAll('Exception: ', '');
-    if (errorMessage.isEmpty || errorMessage == 'Unknown error') {
-      errorMessage = 'network_error'.tr();
-    }
-  }
-  
-  showMessage(context, errorMessage, type: MessageType.error);
-} finally {
-  if (mounted) {
-    setState(() => _isLoading = false);
-  }
-}
 
+      if (!mounted) return;
+
+      if (response['success'] == true) {
+        final data = response['data'];
+
+        await StorageService.saveToken(data['token']);
+        await StorageService.saveUser(data['user']);
+
+        if (!mounted) return;
+
+        showMessage(
+          context,
+          'account_created_successfully'.tr(),
+          type: MessageType.success,
+        );
+
+        await Future.delayed(const Duration(milliseconds: 1500));
+
+        if (!mounted) return;
+
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        if (!mounted) return;
+
+        final errorMessage =
+            response['message'] ?? 'registration_failed'.tr();
+
+        showMessage(
+          context,
+          errorMessage,
+          type: MessageType.error,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      String errorMessage;
+
+      if (e is ApiException) {
+        errorMessage = e.message;
+      } else {
+        errorMessage = e.toString().replaceAll('Exception: ', '');
+
+        if (errorMessage.isEmpty || errorMessage == 'Unknown error') {
+          errorMessage = 'network_error'.tr();
+        }
+      }
+
+      showMessage(
+        context,
+        errorMessage,
+        type: MessageType.error,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   String _formatDateForApi(String date) {
@@ -151,24 +170,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return '$year-$month-${day}T00:00:00Z';
     }
     return date;
-  }
-
-  InputDecoration _decoration(String hint, {Widget? prefix, Widget? suffix}) {
-    final scheme = Theme.of(context).colorScheme;
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: scheme.onSurface.withOpacity(0.6),
-          ),
-      prefixIcon: prefix,
-      suffixIcon: suffix,
-      enabledBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: scheme.onSurface),
-      ),
-      focusedBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: scheme.primary),
-      ),
-    );
   }
 
   @override
@@ -231,7 +232,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   child: Text(
                     'already_have_account'.tr(),
                     style: textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurface.withOpacity(0.7),
+                      color: scheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ),
@@ -278,6 +279,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget _buildProfileImage(Size size) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    
     return Column(
       children: [
         Container(
@@ -306,6 +308,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     TextEditingController? controller,
   }) {
     final scheme = Theme.of(context).colorScheme;
+    
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextField(
@@ -313,7 +316,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
-        decoration: _decoration(hint, prefix: prefix),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: scheme.onSurface.withValues(alpha: 0.6),
+          ),
+          prefixIcon: prefix,
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: scheme.onSurface),
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: scheme.primary),
+          ),
+        ),
       ),
     );
   }
@@ -321,11 +336,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget _buildGenderDropdown() {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: DropdownButtonFormField<String>(
-        value: _gender,
-        decoration: _decoration('select_gender'.tr()),
+        initialValue: _gender,
+        decoration: InputDecoration(
+          hintText: 'select_gender'.tr(),
+          hintStyle: textTheme.bodySmall?.copyWith(
+            color: scheme.onSurface.withValues(alpha: 0.6),
+          ),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: scheme.onSurface),
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: scheme.primary),
+          ),
+        ),
         dropdownColor: scheme.surface,
         style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
         items: const [
@@ -339,15 +366,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Widget _buildDateOfBirth() {
     final scheme = Theme.of(context).colorScheme;
+    
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextField(
         controller: _dobController,
         readOnly: true,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
-        decoration: _decoration(
-          'date_of_birth'.tr(),
-          suffix: Icon(Icons.calendar_today, color: scheme.onSurface, size: 18),
+        decoration: InputDecoration(
+          hintText: 'date_of_birth'.tr(),
+          hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: scheme.onSurface.withValues(alpha: 0.6),
+          ),
+          suffixIcon: Icon(Icons.calendar_today, color: scheme.onSurface, size: 18),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: scheme.onSurface),
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: scheme.primary),
+          ),
         ),
         onTap: _pickDate,
       ),
@@ -361,15 +398,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
     TextEditingController? controller,
   }) {
     final scheme = Theme.of(context).colorScheme;
+    
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextField(
         controller: controller,
         obscureText: obscure,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
-        decoration: _decoration(
-          hint,
-          suffix: IconButton(
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: scheme.onSurface.withValues(alpha: 0.6),
+          ),
+          suffixIcon: IconButton(
             icon: Icon(
               obscure ? Icons.visibility_off : Icons.visibility,
               color: scheme.onSurface,
@@ -377,12 +418,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
             onPressed: onToggle,
           ),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: scheme.onSurface),
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: scheme.primary),
+          ),
         ),
       ),
     );
   }
-  
-  double _scale = 1.0;
 
   Widget _buildCreateAccountButton() {
     final scheme = Theme.of(context).colorScheme;

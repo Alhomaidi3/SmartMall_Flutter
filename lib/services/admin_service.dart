@@ -23,7 +23,7 @@ class AdminService {
     }
   }
 
-  Future<List<ActivityItem>> getRecentActivities({int limit = 10}) async {
+  Future<List<AdminActivityItem>> getRecentActivities({int limit = 10}) async {
     try {
       final response = await _apiService.get(
         '/admin/activities',
@@ -33,7 +33,7 @@ class AdminService {
 
       if (response['success'] == true) {
         final List<dynamic> activities = response['data'] ?? [];
-        return activities.map((json) => ActivityItem.fromJson(json)).toList();
+        return activities.map((json) => AdminActivityItem.fromJson(json)).toList();
       }
       return [];
     } catch (e) {
@@ -42,15 +42,14 @@ class AdminService {
   }
 }
 
-// ✅ تعريف ActivityItem
-class ActivityItem {
+class AdminActivityItem {
   final IconData icon;
   final String title;
   final String subtitle;
   final String time;
   final Color color;
 
-  ActivityItem({
+  AdminActivityItem({
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -58,9 +57,8 @@ class ActivityItem {
     required this.color,
   });
 
-  factory ActivityItem.fromJson(Map<String, dynamic> json) {
-    // تحويل اسم الأيقونة من String إلى IconData
-    IconData _getIcon(String iconName) {
+  factory AdminActivityItem.fromJson(Map<String, dynamic> json) {
+    IconData getIcon(String iconName) {
       switch (iconName) {
         case 'add_business':
           return Icons.add_business;
@@ -79,8 +77,7 @@ class ActivityItem {
       }
     }
 
-    // تحويل اسم اللون من String إلى Color
-    Color _getColor(String colorName) {
+    Color getColor(String colorName) {
       switch (colorName.toLowerCase()) {
         case 'blue':
           return Colors.blue;
@@ -99,12 +96,12 @@ class ActivityItem {
       }
     }
 
-    return ActivityItem(
-      icon: _getIcon(json['icon'] ?? 'notifications'),
+    return AdminActivityItem(
+      icon: getIcon(json['icon'] ?? 'notifications'),
       title: json['title'] ?? '',
       subtitle: json['subtitle'] ?? '',
       time: json['time'] ?? '',
-      color: _getColor(json['color'] ?? 'grey'),
+      color: getColor(json['color'] ?? 'grey'),
     );
   }
 

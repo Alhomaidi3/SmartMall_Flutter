@@ -7,12 +7,12 @@ import 'store_details_screen.dart';
 
 class MapScreen extends StatefulWidget {
   final VoidCallback onProfilePressed;
-  final int? selectedStoreId; // ✅ إضافة هذا
+  final int? selectedStoreId;
 
   const MapScreen({
     super.key, 
     required this.onProfilePressed,
-    this.selectedStoreId, // ✅ إضافة هذا
+    this.selectedStoreId,
   });
 
   @override
@@ -30,12 +30,10 @@ class _MapScreenState extends State<MapScreen> {
   String? _error;
 bool _isPickingLocation = false;
   
-  // ✅ متغيرات مسار المستخدم
-  Offset? _userPosition; // موقع المستخدم على الخريطة (بالنسبة المئوية)
-  StoreDto? _selectedStore; // المحل المختار لعرض الاتجاهات
-  bool _isShowingRoute = false; // هل يتم عرض المسار حالياً
+  Offset? _userPosition; 
+  StoreDto? _selectedStore; 
+  bool _isShowingRoute = false;
   
-  // ألوان المسار
   static const Color _routeColor = Colors.blue;
   static const Color _userMarkerColor = Colors.green;
   static const Color _storeMarkerColor = Colors.red;
@@ -53,17 +51,19 @@ bool _isPickingLocation = false;
       _error = null;
     });
 
-    try {
+   try {
+      final lang = context.locale.languageCode;
+
       final response = await _storeService.getStores(
         page: 1,
         pageSize: 100,
-        language: context.locale.languageCode,
+        language: lang,
       );
 
       final uniqueCategories = <String>{};
 
       for (final store in response.data) {
-        final categoryName = store.getCategoryName(context.locale.languageCode);
+        final categoryName = store.getCategoryName(lang);
 
         if (categoryName != null && categoryName.isNotEmpty) {
           uniqueCategories.add(categoryName);
@@ -76,8 +76,7 @@ bool _isPickingLocation = false;
           _categories = uniqueCategories.toList();
           _isLoading = false;
         });
-        
-        // ✅ بعد تحميل البيانات، معالجة selectedStoreId إن وجد
+
         _processSelectedStoreId();
       }
     } catch (e) {
@@ -90,26 +89,21 @@ bool _isPickingLocation = false;
     }
   }
   void _processSelectedStoreId() {
-    // تجنب المعالجة المتكررة
     if (_hasProcessedSelectedStore || widget.selectedStoreId == null) return;
     
     _hasProcessedSelectedStore = true;
     
-    // البحث عن المتجر في القائمة
     final store = _stores.firstWhere(
       (s) => s.id == widget.selectedStoreId,
       orElse: () => throw Exception('Store not found'),
     );
     
-    // تأخير بسيط لضمان اكتمال بناء الواجهة
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
-        // ✅ تغيير الطابق إذا لزم الأمر
         if (store.floor != _selectedFloor) {
           setState(() {
             _selectedFloor = store.floor;
           });
-          // تأخير إضافي بعد تغيير الطابق
           Future.delayed(const Duration(milliseconds: 200), () {
             if (mounted) _startDirections(store);
           });
@@ -211,38 +205,23 @@ void _showStoreBottomSheet(StoreDto store) {
                 ],
               ),
 
-const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-// ✅ التقييمات - تظهر دائماً
-Row(
-  children: [
-    // عرض النجوم
-    Row(
-      children: List.generate(5, (index) {
-        final rating = store.averageRating ?? 0;
-        if (index < rating.floor()) {
-          return const Icon(Icons.star, color: Colors.amber, size: 18);
-        } else if (index < rating && rating - index > 0.5) {
-          return const Icon(Icons.star_half, color: Colors.amber, size: 18);
-        } else {
-          return const Icon(Icons.star_border, color: Colors.amber, size: 18);
-        }
-      }),
-    ),
-    const SizedBox(width: 8),
-    Text(
-      store.ratingsCount == 0
-          ? 'no_ratings_yet'.tr()
-          : '${store.averageRating?.toStringAsFixed(1) ?? "0"} (${store.ratingsCount} ${'reviews'.tr()})',
-      style: TextStyle(
-        fontSize: 13,
-        color: isDark ? Colors.white70 : Colors.black54,
-      ),
-    ),
-  ],
-),
+                  Row(
+                    children: List.generate(5, (index) {
+                      final rating = store.averageRating;
 
-const SizedBox(height: 16),
+                      if (index < rating.floor()) {
+                        return const Icon(Icons.star, color: Colors.amber, size: 18);
+                      } else if (index < rating) {
+                        return const Icon(Icons.star_half, color: Colors.amber, size: 18);
+                      } else {
+                        return const Icon(Icons.star_border, color: Colors.amber, size: 18);
+                      }
+                    }),
+                  ),
+
+              const SizedBox(height: 16),
 
               if (store.getDescription(locale) != null &&
                   store.getDescription(locale)!.isNotEmpty)
@@ -335,7 +314,6 @@ void _startDirections(StoreDto store) {
       _selectedStore = store;
       _isShowingRoute = true;
       
-      // إذا لم يكن هناك موقع محدد للمستخدم، افتح الـ BottomSheet لاختيار الموقع
       if (_userPosition == null) {
         _showSetUserLocationDialog();
       }
@@ -362,7 +340,6 @@ void _showSetUserLocationDialog() {
         TextButton(
           onPressed: () {
             Navigator.pop(context);
-            // ✅ تفعيل وضع اختيار الموقع تلقائياً
             setState(() {
               _isPickingLocation = true;
             });
@@ -446,7 +423,6 @@ void _showSetUserLocationDialog() {
       onTap: () {
         setState(() {
           _selectedFloor = floor;
-          // تغيير الطابق يزيل المسار الحالي
           _userPosition = null;
           _selectedStore = null;
           _isShowingRoute = false;
@@ -534,7 +510,6 @@ void _showSetUserLocationDialog() {
                           onSingleSelected: (value) {
                             setState(() {
                               _selectedCategory = value;
-                              // تغيير الفلتر يزيل المسار الحالي
                               _userPosition = null;
                               _selectedStore = null;
                               _isShowingRoute = false;
@@ -543,15 +518,14 @@ void _showSetUserLocationDialog() {
                         ),
                       ),
                     
-                    // ✅ شريط معلومات المسار
                     if (_isShowingRoute && _userPosition != null && _selectedStore != null)
                       Container(
                         margin: const EdgeInsets.all(8),
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
+                          color: Colors.blue.withValues(alpha:0.1),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                          border: Border.all(color: Colors.blue.withValues(alpha:0.3)),
                         ),
                         child: Row(
                           children: [
@@ -585,32 +559,29 @@ void _showSetUserLocationDialog() {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            // يمكن إضافة المسافة هنا عند الحاجة
                           ],
                         ),
                       ),
                     
                     Expanded(
-  child: LayoutBuilder(
-    builder: (context, constraints) {
-      final imageSize = Size(constraints.maxWidth, constraints.maxHeight);
-      
-      return GestureDetector(
-        onTapDown: (details) {
-          // ✅ فقط إذا كان في وضع اختيار الموقع
-          if (_isPickingLocation) {
-            final RenderBox box = context.findRenderObject() as RenderBox;
-            final localPosition = box.globalToLocal(details.globalPosition);
-            
-            // تحويل الإحداثيات إلى نسبة مئوية (0-1)
-            final x = (localPosition.dx) / imageSize.width;
-            final y = (localPosition.dy) / imageSize.height;
-            
-            if (x >= 0 && x <= 1 && y >= 0 && y <= 1) {
-              _setUserLocation(Offset(x, y));
-            }
-          }
-        },
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final imageSize = Size(constraints.maxWidth, constraints.maxHeight);
+                          
+                          return GestureDetector(
+                            onTapDown: (details) {
+                              if (_isPickingLocation) {
+                                final RenderBox box = context.findRenderObject() as RenderBox;
+                                final localPosition = box.globalToLocal(details.globalPosition);
+                                
+                                final x = (localPosition.dx) / imageSize.width;
+                                final y = (localPosition.dy) / imageSize.height;
+                                
+                                if (x >= 0 && x <= 1 && y >= 0 && y <= 1) {
+                                  _setUserLocation(Offset(x, y));
+                                }
+                              }
+                            },
 
                             child: InteractiveViewer(
                               panEnabled: true,
@@ -618,7 +589,7 @@ void _showSetUserLocationDialog() {
                               maxScale: 3.0,
                               onInteractionUpdate: (details) {
                               },
-                              child: Container(
+                              child: SizedBox(
                                 width: imageSize.width,
                                 height: imageSize.height,
                                 child: Stack(
@@ -633,35 +604,34 @@ void _showSetUserLocationDialog() {
                                       fit: BoxFit.contain,
                                     ),
                                     
-// ✅ رسم الخط بين المستخدم والمحل (النسخة المصححة)
-if (_isShowingRoute && 
-    _userPosition != null && 
-    _selectedStore != null &&
-    _selectedStore!.x != null &&
-    _selectedStore!.y != null)
-  Positioned(
-    left: 0,
-    top: 0,
-    child: SizedBox(
-      width: imageSize.width,
-      height: imageSize.height,
-      child: CustomPaint(
-        painter: RoutePainter(
-          start: Offset(
-            _userPosition!.dx * imageSize.width,
-            _userPosition!.dy * imageSize.height,
-          ),
-          end: Offset(
-            _selectedStore!.x! * imageSize.width,
-            _selectedStore!.y! * imageSize.height,
-          ),
-          color: _routeColor,
-        ),
-      ),
-    ),
-  ),
+                                    if (_isShowingRoute && 
+                                        _userPosition != null && 
+                                        _selectedStore != null &&
+                                        _selectedStore!.x != null &&
+                                        _selectedStore!.y != null)
+                                      Positioned(
+                                        left: 0,
+                                        top: 0,
+                                        child: SizedBox(
+                                          width: imageSize.width,
+                                          height: imageSize.height,
+                                          child: CustomPaint(
+                                            painter: RoutePainter(
+                                              start: Offset(
+                                                _userPosition!.dx * imageSize.width,
+                                                _userPosition!.dy * imageSize.height,
+                                              ),
+                                              end: Offset(
+                                                _selectedStore!.x! * imageSize.width,
+                                                _selectedStore!.y! * imageSize.height,
+                                              ),
+                                              color: _routeColor,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                     
-                                    // ✅ ماركر المستخدم
+
                                     if (_userPosition != null)
                                       Positioned(
                                         left: _userPosition!.dx * imageSize.width - 12,
@@ -710,7 +680,6 @@ if (_isShowingRoute &&
                                         ),
                                       ),
                                     
-                                    // ✅ ماركرات المتاجر (الموجودة أصلاً)
                                     ..._filteredStores.map((store) {
                                       if (store.x == null || store.y == null) {
                                         return const SizedBox();
@@ -718,9 +687,8 @@ if (_isShowingRoute &&
 
                                       final left = store.x! * imageSize.width;
                                       final top = store.y! * imageSize.height;
-                                      const double markerSize = 20.0; // أو أي حجم تريده
+                                      const double markerSize = 20.0; 
 
-                                      // تمييز المحل المحدد للمسار
                                       final isSelectedStore = _selectedStore?.id == store.id;
                                       final markerColor = isSelectedStore ? _storeMarkerColor : (store.isActive ? Colors.red : Colors.grey);
 
@@ -784,8 +752,6 @@ FloatingActionButton(
     );
   }
 }
-
-// ✅ // ✅ كلاس رسم المسار المبسط (النسخة الأساسية العاملة)
 class RoutePainter extends CustomPainter {
   final Offset start;
   final Offset end;
@@ -805,17 +771,14 @@ class RoutePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
     
-    // ✅ رسم الخط المستقيم الأساسي
     canvas.drawLine(start, end, paint);
     
-    // ✅ رسم دائرة في البداية (موقع المستخدم)
     final startPaint = Paint()
       ..color = Colors.green
       ..style = PaintingStyle.fill;
     canvas.drawCircle(start, 8, startPaint);
     canvas.drawCircle(start, 4, Paint()..color = Colors.white);
     
-    // ✅ رسم دائرة في النهاية (موقع المحل)
     final endPaint = Paint()
       ..color = Colors.red
       ..style = PaintingStyle.fill;
@@ -830,7 +793,6 @@ class RoutePainter extends CustomPainter {
   }
 }
 
-// ✅ ماركر محسن مع دعم التحديد
 class MapMarker extends StatelessWidget {
   final String label;
   final bool isActive;
@@ -864,7 +826,7 @@ class MapMarker extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isSelected ? 0.4 : 0.2),
+              color: Colors.black.withValues(alpha:isSelected ? 0.4 : 0.2),
               blurRadius: isSelected ? 8 : 4,
               offset: const Offset(0, 2),
             ),

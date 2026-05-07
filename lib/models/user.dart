@@ -7,7 +7,6 @@ class User {
   final String? profileImageUrl;
   final String role;
   final bool isActive;
-  final DateTime createdAt; 
   final DateTime? dateOfBirth; 
   
   User({
@@ -19,7 +18,6 @@ class User {
     this.profileImageUrl,
     required this.role,
     required this.isActive,
-    required this.createdAt, 
     this.dateOfBirth, 
   });
   
@@ -33,10 +31,7 @@ class User {
       profileImageUrl: json['profileImageUrl'],
       role: json['role'] ?? 'user',
       isActive: json['isActive'] ?? true,
-      createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt']) 
-          : DateTime.now(),
-      dateOfBirth: json['dateOfBirth'] != null   // ✅ أضف هذا السطر
+      dateOfBirth: json['dateOfBirth'] != null 
           ? DateTime.parse(json['dateOfBirth']) 
           : null,
     );

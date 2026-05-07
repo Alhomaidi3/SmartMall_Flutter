@@ -1,14 +1,10 @@
 // lib/models/store.dart
-import 'package:flutter/material.dart';
-
-// 🔹 DTO للصورة الإضافية
 class StoreImageDto {
   final int id;
   final int storeId;
   final String imageUrl;
   final int displayOrder;
   final bool isPrimary;
-  final DateTime createdAt;
 
   StoreImageDto({
     required this.id,
@@ -16,7 +12,6 @@ class StoreImageDto {
     required this.imageUrl,
     required this.displayOrder,
     required this.isPrimary,
-    required this.createdAt,
   });
 
   factory StoreImageDto.fromJson(Map<String, dynamic> json) {
@@ -26,9 +21,6 @@ class StoreImageDto {
       imageUrl: json['imageUrl'] ?? '',
       displayOrder: json['displayOrder'] ?? 0,
       isPrimary: json['isPrimary'] ?? false,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : DateTime.now(),
     );
   }
 
@@ -39,12 +31,10 @@ class StoreImageDto {
       'imageUrl': imageUrl,
       'displayOrder': displayOrder,
       'isPrimary': isPrimary,
-      'createdAt': createdAt.toIso8601String(),
     };
   }
 }
 
-// 🔹 DTO الأساسي للمتجر (للعرض في القائمة)
 class StoreDto {
   final int id;
   final String nameAr;
@@ -63,10 +53,6 @@ class StoreDto {
   final int? locationId;
   final double? x;
   final double? y;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  
-  // حقول إضافية
   bool isFavorite;
   int? userRating;
   double averageRating;
@@ -90,8 +76,6 @@ class StoreDto {
     this.locationId,
     this.x,
     this.y,
-    required this.createdAt,
-    required this.updatedAt,
     this.isFavorite = false,
     this.userRating,
     this.averageRating = 0.0,
@@ -117,12 +101,6 @@ class StoreDto {
       locationId: json['locationId'],
       x: json['x']?.toDouble(),
       y: json['y']?.toDouble(),
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : DateTime.now(),
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
-          : DateTime.now(),
       isFavorite: json['isFavorite'] ?? false,
       userRating: json['userRating'],
       averageRating: (json['averageRating'] ?? 0).toDouble(),
@@ -164,8 +142,6 @@ class StoreDto {
       'locationId': locationId,
       'x': x,
       'y': y,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
       'isFavorite': isFavorite,
       'userRating': userRating,
       'averageRating': averageRating,
@@ -191,8 +167,6 @@ class StoreDto {
     int? locationId,
     double? x,
     double? y,
-    DateTime? createdAt,
-    DateTime? updatedAt,
     bool? isFavorite,
     int? userRating,
     double? averageRating,
@@ -216,8 +190,6 @@ class StoreDto {
       locationId: locationId ?? this.locationId,
       x: x ?? this.x,
       y: y ?? this.y,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
       isFavorite: isFavorite ?? this.isFavorite,
       userRating: userRating ?? this.userRating,
       averageRating: averageRating ?? this.averageRating,
@@ -226,7 +198,6 @@ class StoreDto {
   }
 }
 
-// 🔹 تفاصيل كاملة للمتجر (موروث من StoreDto)
 class StoreDetailsDto extends StoreDto {
   final String fullDescriptionAr;
   final String fullDescriptionEn;
@@ -250,8 +221,6 @@ class StoreDetailsDto extends StoreDto {
     super.locationId,
     super.x,
     super.y,
-    required super.createdAt,
-    required super.updatedAt,
     super.isFavorite = false,
     super.userRating,
     super.averageRating = 0.0,
@@ -282,8 +251,6 @@ factory StoreDetailsDto.fromJson(Map<String, dynamic> json) {
     locationId: baseStore.locationId,
     x: baseStore.x,
     y: baseStore.y,
-    createdAt: baseStore.createdAt,
-    updatedAt: baseStore.updatedAt,
     isFavorite: baseStore.isFavorite,
     userRating: baseStore.userRating,
     averageRating: baseStore.averageRating,
@@ -318,8 +285,6 @@ factory StoreDetailsDto.fromJson(Map<String, dynamic> json) {
     int? locationId,
     double? x,
     double? y,
-    DateTime? createdAt,
-    DateTime? updatedAt,
     bool? isFavorite,
     int? userRating,
     double? averageRating,
@@ -346,8 +311,6 @@ factory StoreDetailsDto.fromJson(Map<String, dynamic> json) {
       locationId: locationId ?? this.locationId,
       x: x ?? this.x,
       y: y ?? this.y,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
       isFavorite: isFavorite ?? this.isFavorite,
       userRating: userRating ?? this.userRating,
       averageRating: averageRating ?? this.averageRating,
@@ -359,7 +322,6 @@ factory StoreDetailsDto.fromJson(Map<String, dynamic> json) {
   }
 }
 
-// 🔹 DTO لإنشاء متجر جديد
 class StoreCreateDto {
   final String nameAr;
   final String nameEn;
@@ -407,7 +369,6 @@ class StoreCreateDto {
   }
 }
 
-// 🔹 DTO لتحديث متجر
 class StoreUpdateDto {
   final String? nameAr;
   final String? nameEn;
@@ -452,7 +413,6 @@ class StoreUpdateDto {
   }
 }
 
-// 🔹 استجابة Pagination
 class PagedResponse<T> {
   final int page;
   final int pageSize;

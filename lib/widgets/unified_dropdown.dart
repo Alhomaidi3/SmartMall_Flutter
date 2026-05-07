@@ -38,7 +38,7 @@ class UnifiedDropdown<T> extends StatelessWidget {
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButtonFormField<T>(
-          value: value,
+          initialValue: value,
           decoration: InputDecoration(
             labelText: isRequired ? '$label *' : label,
             prefixIcon: Icon(icon, color: scheme.primary),
